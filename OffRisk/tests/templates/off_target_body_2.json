@@ -1,0 +1,454 @@
+{
+    "off_targets": [
+        {
+            "chromosome": "1",
+            "start": 116905,
+            "end": 116928,
+            "strand": "+"
+        },
+        {
+            "chromosome": "1",
+            "start": 293471,
+            "end": 293494,
+            "strand": "+"
+        },
+        {
+            "chromosome": "1",
+            "start": 472912,
+            "end": 472935,
+            "strand": "+"
+        },
+        {
+            "chromosome": "1",
+            "start": 707890,
+            "end": 707913,
+            "strand": "+"
+        },
+        {
+            "chromosome": "1",
+            "start": 176998112,
+            "end": 176998135,
+            "strand": "-"
+        },
+        {
+            "chromosome": "1",
+            "start": 94187585,
+            "end": 94187608,
+            "strand": "-"
+        },
+        {
+            "chromosome": "1",
+            "start": 241154025,
+            "end": 241154048,
+            "strand": "+"
+        },
+        {
+            "chromosome": "1",
+            "start": 243035474,
+            "end": 243035497,
+            "strand": "+"
+        },
+        {
+            "chromosome": "1",
+            "start": 223932915,
+            "end": 223932938,
+            "strand": "+"
+        },
+        {
+            "chromosome": "10",
+            "start": 20041965,
+            "end": 20041988,
+            "strand": "+"
+        },
+        {
+            "chromosome": "10",
+            "start": 20252752,
+            "end": 20252775,
+            "strand": "-"
+        },
+        {
+            "chromosome": "1",
+            "start": 74992955,
+            "end": 74992978,
+            "strand": "-"
+        },
+        {
+            "chromosome": "10",
+            "start": 38469958,
+            "end": 38469981,
+            "strand": "-"
+        },
+        {
+            "chromosome": "10",
+            "start": 70665146,
+            "end": 70665169,
+            "strand": "-"
+        },
+        {
+            "chromosome": "10",
+            "start": 72219935,
+            "end": 72219958,
+            "strand": "-"
+        },
+        {
+            "chromosome": "11",
+            "start": 109141,
+            "end": 109164,
+            "strand": "+"
+        },
+        {
+            "chromosome": "10",
+            "start": 122221927,
+            "end": 122221950,
+            "strand": "-"
+        },
+        {
+            "chromosome": "11",
+            "start": 9016087,
+            "end": 9016110,
+            "strand": "+"
+        },
+        {
+            "chromosome": "11",
+            "start": 38496136,
+            "end": 38496159,
+            "strand": "-"
+        },
+        {
+            "chromosome": "12",
+            "start": 26447315,
+            "end": 26447338,
+            "strand": "-"
+        },
+        {
+            "chromosome": "13",
+            "start": 18709075,
+            "end": 18709098,
+            "strand": "+"
+        },
+        {
+            "chromosome": "13",
+            "start": 104311279,
+            "end": 104311302,
+            "strand": "+"
+        },
+        {
+            "chromosome": "13",
+            "start": 100848151,
+            "end": 100848174,
+            "strand": "-"
+        },
+        {
+            "chromosome": "14",
+            "start": 45852053,
+            "end": 45852076,
+            "strand": "+"
+        },
+        {
+            "chromosome": "14",
+            "start": 77071369,
+            "end": 77071392,
+            "strand": "+"
+        },
+        {
+            "chromosome": "16",
+            "start": 51994700,
+            "end": 51994723,
+            "strand": "-"
+        },
+        {
+            "chromosome": "16",
+            "start": 90190002,
+            "end": 90190025,
+            "strand": "-"
+        },
+        {
+            "chromosome": "19",
+            "start": 178754,
+            "end": 178777,
+            "strand": "+"
+        },
+        {
+            "chromosome": "2",
+            "start": 2394621,
+            "end": 2394644,
+            "strand": "+"
+        },
+        {
+            "chromosome": "2",
+            "start": 123567834,
+            "end": 123567857,
+            "strand": "+"
+        },
+        {
+            "chromosome": "2",
+            "start": 242134657,
+            "end": 242134680,
+            "strand": "-"
+        },
+        {
+            "chromosome": "2",
+            "start": 214952180,
+            "end": 214952203,
+            "strand": "+"
+        },
+        {
+            "chromosome": "2",
+            "start": 232736138,
+            "end": 232736161,
+            "strand": "-"
+        },
+        {
+            "chromosome": "21",
+            "start": 13808927,
+            "end": 13808950,
+            "strand": "+"
+        },
+        {
+            "chromosome": "20",
+            "start": 64307145,
+            "end": 64307168,
+            "strand": "-"
+        },
+        {
+            "chromosome": "20",
+            "start": 61298960,
+            "end": 61298983,
+            "strand": "-"
+        },
+        {
+            "chromosome": "22",
+            "start": 31035295,
+            "end": 31035318,
+            "strand": "+"
+        },
+        {
+            "chromosome": "3",
+            "start": 97327629,
+            "end": 97327652,
+            "strand": "+"
+        },
+        {
+            "chromosome": "3",
+            "start": 146744810,
+            "end": 146744833,
+            "strand": "-"
+        },
+        {
+            "chromosome": "3",
+            "start": 65728020,
+            "end": 65728043,
+            "strand": "+"
+        },
+        {
+            "chromosome": "3",
+            "start": 30349500,
+            "end": 30349523,
+            "strand": "-"
+        },
+        {
+            "chromosome": "3",
+            "start": 40282096,
+            "end": 40282119,
+            "strand": "+"
+        },
+        {
+            "chromosome": "3",
+            "start": 37554097,
+            "end": 37554120,
+            "strand": "-"
+        },
+        {
+            "chromosome": "4",
+            "start": 13553169,
+            "end": 13553192,
+            "strand": "+"
+        },
+        {
+            "chromosome": "4",
+            "start": 118652898,
+            "end": 118652921,
+            "strand": "-"
+        },
+        {
+            "chromosome": "4",
+            "start": 139368938,
+            "end": 139368961,
+            "strand": "-"
+        },
+        {
+            "chromosome": "4",
+            "start": 164270433,
+            "end": 164270456,
+            "strand": "+"
+        },
+        {
+            "chromosome": "4",
+            "start": 187355762,
+            "end": 187355785,
+            "strand": "-"
+        },
+        {
+            "chromosome": "5",
+            "start": 92392693,
+            "end": 92392716,
+            "strand": "-"
+        },
+        {
+            "chromosome": "5",
+            "start": 181346015,
+            "end": 181346038,
+            "strand": "-"
+        },
+        {
+            "chromosome": "6",
+            "start": 128088,
+            "end": 128111,
+            "strand": "+"
+        },
+        {
+            "chromosome": "6",
+            "start": 42214970,
+            "end": 42214993,
+            "strand": "-"
+        },
+        {
+            "chromosome": "6",
+            "start": 44869449,
+            "end": 44869472,
+            "strand": "-"
+        },
+        {
+            "chromosome": "6",
+            "start": 170618328,
+            "end": 170618351,
+            "strand": "-"
+        },
+        {
+            "chromosome": "7",
+            "start": 122600819,
+            "end": 122600842,
+            "strand": "-"
+        },
+        {
+            "chromosome": "8",
+            "start": 188267,
+            "end": 188290,
+            "strand": "+"
+        },
+        {
+            "chromosome": "8",
+            "start": 3325462,
+            "end": 3325485,
+            "strand": "+"
+        },
+        {
+            "chromosome": "8",
+            "start": 131452621,
+            "end": 131452644,
+            "strand": "+"
+        },
+        {
+            "chromosome": "8",
+            "start": 133102994,
+            "end": 133103017,
+            "strand": "-"
+        },
+        {
+            "chromosome": "8",
+            "start": 90140413,
+            "end": 90140436,
+            "strand": "+"
+        },
+        {
+            "chromosome": "9",
+            "start": 17708117,
+            "end": 17708140,
+            "strand": "+"
+        },
+        {
+            "chromosome": "9",
+            "start": 70089212,
+            "end": 70089235,
+            "strand": "+"
+        },
+        {
+            "chromosome": "1_KI270763v1_alt",
+            "start": 47582,
+            "end": 47605,
+            "strand": "+"
+        },
+        {
+            "chromosome": "9",
+            "start": 108933195,
+            "end": 108933218,
+            "strand": "-"
+        },
+        {
+            "chromosome": "13_KI270840v1_alt",
+            "start": 10725,
+            "end": 10748,
+            "strand": "+"
+        },
+        {
+            "chromosome": "9_GL383541v1_alt",
+            "start": 65100,
+            "end": 65123,
+            "strand": "+"
+        },
+        {
+            "chromosome": "9",
+            "start": 138298350,
+            "end": 138298373,
+            "strand": "-"
+        },
+        {
+            "chromosome": "X",
+            "start": 39337244,
+            "end": 39337267,
+            "strand": "+"
+        },
+        {
+            "chromosome": "X",
+            "start": 48959626,
+            "end": 48959649,
+            "strand": "-"
+        },
+        {
+            "chromosome": "X",
+            "start": 134175114,
+            "end": 134175137,
+            "strand": "-"
+        },
+        {
+            "chromosome": "X",
+            "start": 145879769,
+            "end": 145879792,
+            "strand": "+"
+        },
+        {
+            "chromosome": "Y",
+            "start": 24301359,
+            "end": 24301382,
+            "strand": "-"
+        },
+        {
+            "chromosome": "Y",
+            "start": 25368759,
+            "end": 25368782,
+            "strand": "+"
+        }
+    ],
+    "db_list": [
+        "gencode",
+        "omim",
+        "humantf",
+        "mirgene",
+        "protein_atlas",
+        "remapepd",
+        "rbp",
+        "cosmic",
+        "enhanceratlas"
+    ],
+    "request_id": 1
+}

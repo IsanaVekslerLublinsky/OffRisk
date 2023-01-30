@@ -1,0 +1,11 @@
+{
+  "request_id": 1,
+  "sites": [
+    {
+      "sequence": "CTTAAGAATACGCGTAGTCGAGG",
+    },
+    {
+      "sequence": "ATGTCTGGTAAGACGCCCATCGG",
+    }
+  ]
+}
