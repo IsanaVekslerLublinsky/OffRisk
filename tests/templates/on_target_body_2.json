@@ -1,0 +1,12 @@
+{
+  "request_id": 1,
+  "sites": [
+    {
+      "sequence": "CTTAAGAATACGCGTAGTCGAGG"
+    }
+  ],
+  "search_tools": [
+        "flashfry",
+        "cas_offinder"
+    ]
+}

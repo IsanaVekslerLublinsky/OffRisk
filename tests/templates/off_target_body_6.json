@@ -1,0 +1,115 @@
+{
+    "request_id": 305495,
+    "organism": "human",
+    "on_target": {
+        "id": "305495",
+        "chromosome": "20",
+        "start": 40687936,
+        "end": 40687959,
+        "strand": "-",
+        "sequence": "CGGTGCGAGAAACTCGCCAACTC",
+        "mismatch": 0
+    },
+    "off_targets": [
+        {
+            "id": "0",
+            "chromosome": "8",
+            "start": 119696996,
+            "end": 119697019,
+            "strand": "-",
+            "sequence": "TTCAAGAAACCTGCCAACTCAGG",
+            "score": 0.2055944054034965,
+            "mismatch": 4
+        },
+        {
+            "id": "1",
+            "chromosome": "11",
+            "start": 119924333,
+            "end": 119924356,
+            "strand": "+",
+            "sequence": "TGCAGGAAACACCCCAACTCTGG",
+            "score": 0.204631579152,
+            "mismatch": 4
+        },
+        {
+            "id": "2",
+            "chromosome": "21",
+            "start": 5686553,
+            "end": 5686576,
+            "strand": "-",
+            "sequence": "TGTGCAAAACTTGCCAACTCAGG",
+            "score": 0.1850961536875,
+            "mismatch": 4
+        },
+        {
+            "id": "3",
+            "chromosome": "Y",
+            "start": 17403201,
+            "end": 17403224,
+            "strand": "+",
+            "sequence": "TGTGCAAAACTTGCCAACTCAGG",
+            "score": 0.1850961536875,
+            "mismatch": 4
+        },
+        {
+            "id": "4",
+            "chromosome": "HG2513_PATCH",
+            "start": 314753,
+            "end": 314776,
+            "strand": "-",
+            "sequence": "TGTGCAAAACTTGCCAACTCAGG",
+            "score": 0.1850961536875,
+            "mismatch": 4
+        },
+        {
+            "id": "5",
+            "chromosome": "21",
+            "start": 7637901,
+            "end": 7637924,
+            "strand": "+",
+            "sequence": "TGTGCAAAACTTGCCAACTCAGG",
+            "score": 0.1850961536875,
+            "mismatch": 4
+        },
+        {
+            "id": "6",
+            "chromosome": "21",
+            "start": 7118706,
+            "end": 7118729,
+            "strand": "-",
+            "sequence": "TGTGCAAAACTTGCCAACTCAGG",
+            "score": 0.1850961536875,
+            "mismatch": 4
+        },
+        {
+            "id": "7",
+            "chromosome": "HG2509_PATCH",
+            "start": 294098,
+            "end": 294121,
+            "strand": "-",
+            "sequence": "TGTGCAAAACTTGCCAACTCAGG",
+            "score": 0.1850961536875,
+            "mismatch": 4
+        },
+        {
+            "id": "8",
+            "chromosome": "HSCHR22_UNLOCALIZED_CTG3",
+            "start": 1011,
+            "end": 1034,
+            "strand": "-",
+            "sequence": "TGTGCAAAACTTGCCAACTCAGG",
+            "score": 0.1850961536875,
+            "mismatch": 4
+        },
+        {
+            "id": "9",
+            "chromosome": "HG2511_PATCH",
+            "start": 115862,
+            "end": 115885,
+            "strand": "+",
+            "sequence": "TGTGCAAAACTTGCCAACTCAGG",
+            "score": 0.1850961536875,
+            "mismatch": 4
+        }
+    ]
+}

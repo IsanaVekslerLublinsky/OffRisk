@@ -1,0 +1,97 @@
+{
+    "request_id": 293462,
+    "organism": "human",
+    "off_targets": [
+        {
+            "chromosome": "15",
+            "start": 98961079,
+            "end": 98961102,
+            "strand": "+",
+            "id": 0,
+            "sequence": "GGCGCTCAGGAGCCTCCTGCTGG"
+        },
+        {
+            "chromosome": "12",
+            "start": 119895995,
+            "end": 119896018,
+            "strand": "+",
+            "id": 1,
+            "sequence": "CTCCCTCGGGAGCCTCTAGCAGG"
+        },
+        {
+            "chromosome": "7",
+            "start": 158134019,
+            "end": 158134042,
+            "strand": "-",
+            "id": 2,
+            "sequence": "CACACTCGGGGGCCTCCTGCAGG"
+        },
+        {
+            "chromosome": "15",
+            "start": 100919929,
+            "end": 100919952,
+            "strand": "+",
+            "id": 3,
+            "sequence": "ACCGCCCGGGAGCCTCTCGCTGG"
+        },
+        {
+            "chromosome": "19",
+            "start": 14545315,
+            "end": 14545338,
+            "strand": "+",
+            "id": 4,
+            "sequence": "CCCGCCAGGGAGCCTCATGCTGG"
+        },
+        {
+            "chromosome": "2",
+            "start": 149377878,
+            "end": 149377901,
+            "strand": "+",
+            "id": 5,
+            "sequence": "CTTGCCCTGGAGCCTCCTGCAGG"
+        },
+        {
+            "chromosome": "10",
+            "start": 123972769,
+            "end": 123972792,
+            "strand": "-",
+            "id": 6,
+            "sequence": "CCCGCCCGGGAGCCTCCTCCAGG"
+        },
+        {
+            "chromosome": "15",
+            "start": 60766699,
+            "end": 60766722,
+            "strand": "+",
+            "id": 7,
+            "sequence": "CTCTCCCAGGAGCTTCTTGCTGG"
+        },
+        {
+            "chromosome": "1",
+            "start": 8026243,
+            "end": 8026266,
+            "strand": "+",
+            "id": 8,
+            "sequence": "ATCGCGCAGGCGCCTCTTGCTGG"
+        },
+        {
+            "chromosome": "7",
+            "start": 70557985,
+            "end": 70558008,
+            "strand": "-",
+            "id": 9,
+            "sequence": "CTGGCTGGGAAGCCTCTTGCAGG"
+        }
+    ],
+    "on_target": {
+        "chromosome": "3",
+        "start": 46373882,
+        "end": 46373905,
+        "strand": "-",
+        "id": 293462,
+        "sequence": "TGGCTCGCTCGGGAGCCTCTTGC"
+    },
+    "db_list": [
+        "all"
+    ]
+}

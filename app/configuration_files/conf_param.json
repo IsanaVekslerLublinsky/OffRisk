@@ -1,0 +1,9 @@
+{
+
+ "db_list": [
+  "all"
+ ],
+ "debug": "True",
+ "update_db": "False",
+ "update_db_base_dir_path": "/mnt/gogenome/off-tov/databases"
+}
