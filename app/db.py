@@ -526,9 +526,9 @@ class HumanTFDb(Db):
 
             # Update relevant fields in global off_target dataframe
             off_target_df = merge_off_target_information(off_target_df,
-                                                         self.complete_result[["off_target_id", "source"]].astype(
-                                                             {"off_target_id": int, "source": str}).rename(
-                                                             columns={"source": "HumanTF_source"}), ["HumanTF_source"],
+                                                         self.complete_result[["off_target_id", "HumanTF_source"]].astype(
+                                                             {"off_target_id": int, "HumanTF_source": str}),
+                                                         ["HumanTF_source"],
                                                          "string")
         return off_target_df
 

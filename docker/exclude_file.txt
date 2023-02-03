@@ -8,6 +8,7 @@
 /mnt/gogenome/off-tov/databases/MirGeneDB/hsa-all.bed
 /mnt/gogenome/off-tov/databases/OMIM/genemap2.txt
 /mnt/gogenome/off-tov/databases/OMIM/mim2gene.txt
+
 /mnt/gogenome/off-tov/databases/Pfam_protein_domains/hgTables
 /mnt/gogenome/off-tov/databases/ProteinAtlas/normal_tissue.tsv
 /mnt/gogenome/off-tov/databases/RBP/41586_2020_2077_MOESM3_ESM.xlsx

@@ -1,24 +1,23 @@
 version: "3.9"  # optional since v1.27.0
 services:
-  off-tov-server:
+  off-risk-server:
     build:
-      context: /home/gilada/git_code/off-tov/
-      dockerfile: xeon.flask.Dockerfile
+      context: /home/gilada/git_code/thesis/OffRisk/
+      dockerfile: Dockerfile
     ports:
       - "8123:80"
     volumes:
       - /mnt/gogenome/off-tov/databases:/databases
-    image: off-tov-server
+    image: off-risk-server
 
-  off-tov-ui:
+  off-risk-ui:
     build:
-      context: /home/gilada/git_code/off-tov-ui/
+      context: /home/gilada/git_code/thesis/OffRisk-ui/
       dockerfile: Dockerfile
     ports:
      - "8501:8501"
-    image: off-tov-ui
-
+    image: off-risk-ui
 networks:
  default:
    external:
-    name: off-tov-net
+    name: off-risk-net

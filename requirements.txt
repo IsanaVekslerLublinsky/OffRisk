@@ -15,3 +15,5 @@ requests==2.28.1
 scipy==1.9.3
 validators==0.20.0
 wget==3.2
+pytest~=7.2.1
+httpx~=0.23.3

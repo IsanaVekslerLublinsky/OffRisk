@@ -97,7 +97,6 @@ COPY ./requirements.txt /off-tov/requirements.txt
 RUN pip install -r /off-tov/requirements.txt
 
 COPY ./app /off-tov/app
-COPY ./__init__.py /off-tov/__init__.py
 COPY ./timeout.conf  /etc/nginx/conf.d/timeout.conf
 WORKDIR /app/tmp
 WORKDIR /off-tov/log

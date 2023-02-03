@@ -1,72 +1,31 @@
-[![Build](https://github.com/crispr-il/off-tov/actions/workflows/ci.yml/badge.svg)](https://github.com/crispr-il/off-tov/actions/workflows/ci.yml)
-[![Deploy to EKS](https://github.com/crispr-il/off-tov/actions/workflows/cd.yml/badge.svg)](https://github.com/crispr-il/off-tov/actions/workflows/cd.yml)
+# offRisk
 
+A new pipeline that aims to help design gRNA by analyzing the off-targets location on the genome by using biological
+information in different levels of DNA, RNA and protein gathered from different databases, and presenting the results to
+the user
 
-# off-tov
-
-<img src="https://user-images.githubusercontent.com/553010/109801117-b576df00-7c26-11eb-99c1-fdd210ddafdf.png" width="300" height="300" />
-
-
-
-### Build the docker locally
-~~~
-docker build --no-cache -t off-tov-server ./ -f xeon.flask.Dockerfile
-~~~
-
-### Run the docker
-~~~
-docker run -p8123:80 -v/mnt/gogenome/off-tov/databases:/databases off-tov-server
-~~~
-If you are running with off-tov UI as well you need to connect them to the same network.
-To create the network and then connect the docker to it:
+OffRisk is running with the UI OffRisk-UI, and both need to be on the same network.
+To create the network:
 
 ~~~
-docker network create off-tov-net
-docker run -p8123:80 --net off-tov-net -v/mnt/gogenome/off-tov/databases:/databases off-tov-server
-~~~
-
-For debug:
-~~~
-docker run -ti --entrypoint bash -v/mnt/gogenome/off-tov/databases:/databases off-tov-server
-~~~
-
-
-### content of input.txt (see where the genome is)
-~~~
-/host/home/zozo123/genomes/GCF_000004515.5_Glycine_max_v2.1_genomic_for_CRISPRIL.fna
-NNNNNNNNNNNNNNNNNNNNNRG
-GGCCGACCTGTCGCTGACGCNNN 5
-CGCCAGCGTCAGCGACAGGTNNN 5
-ACGGCGCCAGCGTCAGCGACNNN 5
-GTCGCTGACGCTGGCGCCGTNNN 5
-~~~
-
-### inside the docker run:
-~~~
-./cas-offinder /host/path/to/input.txt C ./output.txt
+docker network create off-risk-net
 ~~~
 
 ## Build the docker:
+
+In order to build the docker you need to make sure the full path for the folder to be build is 
+in the context field in docker-compose.yaml
 ~~~
-docker build -t cas-offinder-local-server ./ -f xeon.flask.Dockerfile
+docker-compose build
 ~~~
 
 ## Run the docker server:
-if gogenome is mounted run:
-~~~
-docker run -p8123:80 -v/mnt/gogenome/:/gogenome off-tov-server
-~~~
-For debug:
-~~~
-docker run -ti --entrypoint bash -v/mnt/gogenome/:/gogenome off-tov-server
-~~~
+The path for the volume with the database file need to be updates in the docker-compose.yaml:
 
+for example:
 
-else run:
+<path_to_database_folder>:/databases -> /user/gilad/off-tov/databases:/databases
+
 ~~~
-docker run -p8123:80 -v/:/host off-tov-server
-~~~
-for debug: 
-~~~
-docker run -ti --entrypoint bash -v/:/host off-tov-server
+docker-compose up
 ~~~

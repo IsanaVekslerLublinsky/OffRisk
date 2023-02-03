@@ -8,7 +8,7 @@ genomes:
   soybean: /gogenome/off-tov/databases/genome/hg38.fa
   tomato: /gogenome/off-tov/databases/genome/hg38.fa
 databases:
-  base_path: /gogenome/off-tov/databases
+  base_path: /databases
   gencode:
     human:
       path: GENCODE/gencode.v42.chr_patch_hapl_scaff.annotation_sort.gff3
@@ -141,7 +141,7 @@ databases:
         - gene_ensembl_id
         - gene_symbol
         - Family
-        - source
+        - HumanTF_source
       select_attributes:
         - original_name: source
           return_name: HumanTF_source
