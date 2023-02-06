@@ -93,14 +93,14 @@ RUN git clone https://github.com/hyugel/cas-offinder-bulge . && \
 ENV PATH="/app/tools:${PATH}"
 ENV PATH="/root/.sdkman/candidates/java/current/bin:${PATH}"
 
-COPY ./requirements.txt /off-tov/requirements.txt
-RUN pip install -r /off-tov/requirements.txt
+COPY ./requirements.txt /off-risk/requirements.txt
+RUN pip install -r /off-risk/requirements.txt
 
-COPY ./app /off-tov/app
+COPY ./app /off-risk/app
 COPY ./timeout.conf  /etc/nginx/conf.d/timeout.conf
 WORKDIR /app/tmp
-WORKDIR /off-tov/log
-WORKDIR /off-tov/app/off_target_output
-WORKDIR /off-tov/app
+WORKDIR /off-risk/log
+WORKDIR /off-risk/app/off_target_output
+WORKDIR /off-risk/app
 
 RUN rm -rf /app/tools/cas-offinder.zip

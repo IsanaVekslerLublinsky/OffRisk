@@ -19,8 +19,8 @@ import argparse
 ssl._create_default_https_context = ssl._create_unverified_context
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-HG19TOHG38_CONVERTOR = "/home/gilada/Downloads/hg19ToHg38.over.chain.gz"
-LIFTOVER_PATH = "/home/gilada/Downloads/liftOver"
+HG19TOHG38_CONVERTOR = ""
+LIFTOVER_PATH = ""
 pd.set_option('display.max_columns', 7)
 
 # Global function
@@ -40,7 +40,7 @@ def run_external_proc(args):
     return result_message
 
 
-ENSG_SYMBOL_MAP = f"{BASE_DIR}/scripts/ensg_to_symbol.csv"
+ENSG_SYMBOL_MAP = ""
 
 
 def create_ensg_symbol_mapping():
@@ -55,11 +55,10 @@ def create_ensg_symbol_mapping():
 
 
 # GENCODE
-GENCODE_INPUT_PATH = "/mnt/gogenome/off-tov/databases/GENCODE/gencode.v42.chr_patch_hapl_scaff.annotation.gff3"
-GENCODE_OUTPUT_PATH_FINAL = f"{BASE_DIR}/scripts/gencode.v42.chr_patch_hapl_scaff." \
-                            "annotation_sort.gff3"
+GENCODE_INPUT_PATH = ""
+GENCODE_OUTPUT_PATH_FINAL = ""
 
-GENCODE_MAPPING = "/mnt/gogenome/off-tov/databases/GENCODE/GCA_000001405.28_GRCh38.p13_assembly_report.txt"
+GENCODE_MAPPING = ""
 GENCODE_FILTER_ROWS = f"{BASE_DIR}/scripts/Remove.csv"
 
 
@@ -273,8 +272,8 @@ def preprocess_gencode():
 
 
 # MirGeneDB
-MIRGENEDB_HG37_INPUT_PATH = "/mnt/gogenome/off-tov/databases/MirGeneDB/hsa-all.bed"
-MIRGENEDB_OUTPUT_PATH = f"{BASE_DIR}/scripts/mirgene.bed"
+MIRGENEDB_HG37_INPUT_PATH = ""
+MIRGENEDB_OUTPUT_PATH = ""
 
 
 def preprocess_mirgenedb():
@@ -290,13 +289,13 @@ def preprocess_mirgenedb():
 
 
 # Remap and EPD
-REMAP_INPUT_PATH = "/mnt/gogenome/off-tov/databases/ReMap_EPD/remap2022_nr_macs2_hg38_v1_0.bed"
-EPD_H_INPUT_PATH = "/mnt/gogenome/off-tov/databases/ReMap_EPD/human_epdnew_vlHU3.bed"
-EPD_H_NC_INPUT_PATH = "/mnt/gogenome/off-tov/databases/ReMap_EPD/human_nc_epdnew_khMjQ.bed"
-EPD_H_NEW_PATH = f"{BASE_DIR}/scripts/epd_h_new.bed"
-EPD_H_NC_NEW_PATH = f"{BASE_DIR}/scripts/epd_h_nc_new.bed"
-MERGE_EPD_PATH = f"{BASE_DIR}/scripts/epd_new.bed"
-REMAP_EPD_OUTPUT_PATH = f"{BASE_DIR}/scripts/remap_epd.bed"
+REMAP_INPUT_PATH = ""
+EPD_H_INPUT_PATH = ""
+EPD_H_NC_INPUT_PATH = ""
+EPD_H_NEW_PATH = ""
+EPD_H_NC_NEW_PATH = ""
+MERGE_EPD_PATH = ""
+REMAP_EPD_OUTPUT_PATH = ""
 
 
 def process_epd(epd_path, coding):
@@ -387,9 +386,9 @@ TISSUE_OR_CELL_STR_NAMES = "A375 	A549 	AML_blast 	Astrocyte 	BJ 	Bronchia_epith
                            "PBMC 	PC3 	PrEC SGBS_adipocyte 	SK-N-SH 	SK-N-SH_RA 	Skeletal_muscle 	" \
                            "Small_intestine 	Sperm Spleen 	T47D 	T98G 	th1 	Thymus 	U2OS VCaP 	ZR75-30"
 BASE_URL = "http://www.enhanceratlas.org/data/AllEPs/hs/{}_EP.txt"
-ENHANCER_ATLAS_HG19 = f"{BASE_DIR}/scripts/enhancerAtlas_hg19.bed"
-ENHANCER_ATLAS_HG38 = f"{BASE_DIR}/scripts/enhancerAtlas_hg38.bed"
-ENHANCER_ATLAS_OUTPUT = f"{BASE_DIR}/scripts/enhanceratlas.bed"
+ENHANCER_ATLAS_HG19 = ""
+ENHANCER_ATLAS_HG38 = ""
+ENHANCER_ATLAS_OUTPUT = ""
 
 
 def create_tissue_or_cell_list(string_to_convert):
@@ -507,10 +506,10 @@ def preprocess_enhanceratlas():
 
 
 # OMIM
-GENEMAP2_INPUT_PATH = "/mnt/gogenome/off-tov/databases/OMIM/genemap2.txt"
-MIM2GENE_INPUT_PATH = "/mnt/gogenome/off-tov/databases/OMIM/mim2gene.txt"
-OMIM_CSV_OUTPUT_PATH = f"{BASE_DIR}/scripts/omim.csv"
-OMIM_BED_OUTPUT_PATH = f"{BASE_DIR}/scripts/omim.bed"
+GENEMAP2_INPUT_PATH = ""
+MIM2GENE_INPUT_PATH = ""
+OMIM_CSV_OUTPUT_PATH = ""
+OMIM_BED_OUTPUT_PATH = ""
 
 
 def preprocess_omim():
@@ -596,9 +595,9 @@ def preprocess_omim():
 
 
 # Human TF
-TF_INPUT_PATH = "/mnt/gogenome/off-tov/databases/HumanTFDB/_TF.txt"
-TF_COFACTOR_INPUT_PATH = "/mnt/gogenome/off-tov/databases/HumanTFDB/Homo_sapiens_TF_cofactors.txt"
-HUMANTF_OUTPUT_PATH = f"{BASE_DIR}/scripts/human_tf.csv"
+TF_INPUT_PATH = ""
+TF_COFACTOR_INPUT_PATH = ""
+HUMANTF_OUTPUT_PATH = ""
 
 
 def preprocess_humantf():
@@ -619,8 +618,8 @@ def preprocess_humantf():
 
 
 # Protein Atlas
-PA_INPUT_PATH = "/mnt/gogenome/off-tov/databases/ProteinAtlas/normal_tissue.tsv"
-PA_OUTPUT_PATH = f"{BASE_DIR}/scripts/protein_atlas.csv"
+PA_INPUT_PATH = ""
+PA_OUTPUT_PATH = ""
 FILTER_INTEGER = 50
 
 
@@ -685,8 +684,8 @@ def preprocess_proteinatlas():
 
 
 # RBP
-RBP_INPUT_PATH = "/mnt/gogenome/off-tov/databases/RBP/41586_2020_2077_MOESM3_ESM.xlsx"
-RBP_OUTPUT_PATH = f"{BASE_DIR}/scripts/rbp.csv"
+RBP_INPUT_PATH = ""
+RBP_OUTPUT_PATH = ""
 
 
 def preprocess_rbp():
@@ -712,8 +711,8 @@ def preprocess_rbp():
 
 
 # COSMIC
-COSMIC_INPUT_PATH = "/mnt/gogenome/off-tov/databases/COSMIC/cancer_gene_census.csv"
-COSMIC_OUTPUT_PATH = f"{BASE_DIR}/scripts/cosmic.csv"
+COSMIC_INPUT_PATH = ""
+COSMIC_OUTPUT_PATH = ""
 
 
 def separate_id(line):
@@ -745,8 +744,8 @@ def preprocess_cosmic():
     db_df.to_csv(COSMIC_OUTPUT_PATH, sep="\t", index=False)
 
 
-PFAM_INPUT_PATH = "/mnt/gogenome/off-tov/databases/Pfam_protein_domains/hgTables"
-PFAM_GENCODE_INTERSECT_PATH = "pfam_protein_domains.bed"
+PFAM_INPUT_PATH = ""
+PFAM_GENCODE_INTERSECT_PATH = ""
 
 
 # Pfam Protein Domain
@@ -816,9 +815,8 @@ def preprocess_pfam_protein_domains():
 
 
 # TargetScan
-TARGET_SCAN_INPUT_PATH = \
-    "/mnt/gogenome/off-tov/databases/TargetScan/Predicted_Target_Locations.default_predictions.hg19.bed"
-TARGET_SCAN_OUTPUT_PATH = "targetscan.bed"
+TARGET_SCAN_INPUT_PATH = ""
+TARGET_SCAN_OUTPUT_PATH = ""
 
 
 def preprocess_target_scan():
@@ -857,203 +855,6 @@ def present_gencode_file_stat():
     pprint.pprint(available_limits)
     pprint.pprint(parent_child_map)
     in_handle.close()
-
-
-# Global function for reprocess for other organisms
-def add_attribute_level_by_parent(file, level, my_att, sons_att, my_att_data_name, added_att_name):
-    default_columns = ["###chromosome###", "###source###", "###segment###", "###start###",
-                       "###end###", "###score###", "###strand###", "###frame###", "attributes"]
-    bed = BedTool(file)
-    name = os.path.splitext(os.path.basename(file))[0]
-    location = os.path.dirname(file)
-    bed_df = bed.to_dataframe(comment="#",
-                              names=default_columns,
-                              dtype={"###chromosome###": "str"})
-
-    # bed_df = bed_df.loc[range(1000)]
-    # print(bed_df.columns)
-    bed_df = separate_attributes(bed_df)
-    if my_att_data_name not in bed_df.columns:
-        return file
-    # add_values = np.array(["" for i in range(len(bed_df))])
-    add_values = np.empty(len(bed_df), dtype=object)
-    df_me = bed_df.loc[bed_df["###segment###"] == level]
-    add_values[df_me.index] = list(df_me[my_att_data_name])
-
-    for idx, row in df_me.iterrows():
-        my_att_value = row[my_att]
-        add_att_data_value = row[my_att_data_name]
-        x_df = bed_df[(bed_df["###start###"] >= row["###start###"]) & (bed_df["###end###"] <= row["###end###"])]
-        add_attribute_level_by_parent_worker(x_df, my_att, my_att_value, sons_att, add_att_data_value, add_values)
-
-    bed_df[added_att_name] = add_values
-    attributes_df = bed_df.loc[:, set(bed_df.columns).difference(set(default_columns))]
-    bed_df = bed_df[default_columns]
-    attributes_list_dict = attributes_df.to_dict(orient="records")
-    bed_df["attributes"] = [";".join(
-        ["{}={}".format(att_name, att_value) for att_name, att_value in attributes_dict.items() if
-         att_value is not np.nan]) for attributes_dict in attributes_list_dict]
-    # bed_df.to_csv("{}/{}.processed.gff".format(location, name), sep="\t", index=False, header=False)
-    new_bed = BedTool.from_dataframe(bed_df, na_rep=".")
-    out_file = "{}/{}.added.gff".format(location, name)
-    new_bed.saveas(out_file)
-
-    return out_file
-
-
-def add_attribute_level_by_parent_worker(df, my_att, parent_att_value, sons_att_name, add_att_data_value, add_values):
-    sons_df = df[df[sons_att_name] == parent_att_value]
-    if len(sons_df) > 0:
-        # print(len(sons_df))
-        add_values[sons_df.index] = add_att_data_value
-        for idx, row in sons_df.iterrows():
-            my_att_value = row[my_att]
-            x_df = df[(df["###start###"] >= row["###start###"]) & (df["###end###"] <= row["###end###"])]
-            add_attribute_level_by_parent_worker(x_df, my_att, my_att_value, sons_att_name, add_att_data_value,
-                                                 add_values)
-
-    return sons_df
-
-
-def filter_attribute_level_by_parent(file, level, my_att, sons_att, my_att_data_name, filter_att_value):
-    default_columns = ["###chromosome###", "###source###", "###segment###", "###start###",
-                       "###end###", "###score###", "###strand###", "###frame###", "attributes"]
-    bed = BedTool(file)
-    name = os.path.splitext(os.path.basename(file))[0]
-    location = os.path.dirname(file)
-    bed_df = bed.to_dataframe(comment="#",
-                              names=default_columns,
-                              dtype={"###chromosome###": "str"})
-
-    # bed_df = bed_df.loc[range(1000)]
-    bed_df = separate_attributes(bed_df)
-    if my_att_data_name not in bed_df.columns:
-        return file
-
-    filter_values = np.empty(len(bed_df), dtype=bool)
-    filter_values.fill(False)
-    df_me = bed_df.loc[bed_df["###segment###"] == level]
-    filter_values[list(df_me.index)] = df_me[my_att_data_name].map(
-        lambda v: False if v is not np.nan and v is not None else True)
-
-    for idx, row in df_me.iterrows():
-        my_att_value = row[my_att]
-        add_att_data_value = row[my_att_data_name]
-        x_df = bed_df[(bed_df["###start###"] >= row["###start###"]) & (bed_df["###end###"] <= row["###end###"])]
-        filter_attribute_level_by_parent_worker(x_df, my_att, my_att_value, sons_att, add_att_data_value, filter_values)
-
-    bed_df = bed_df[list(map(lambda v: v != filter_att_value, filter_values))]
-    attributes_df = bed_df.loc[:, set(bed_df.columns).difference(set(default_columns))]
-    bed_df = bed_df[default_columns]
-    attributes_list_dict = attributes_df.to_dict(orient="records")
-    bed_df["attributes"] = [";".join(
-        ["{}={}".format(att_name, att_value) for att_name, att_value in attributes_dict.items() if
-         att_value is not np.nan]) for attributes_dict in attributes_list_dict]
-    # bed_df.to_csv("{}/{}.processed.gff".format(location, name), sep="\t", index=False, header=False)
-    new_bed = BedTool.from_dataframe(bed_df, na_rep=".")
-    out_file = "{}/{}.filtered.gff".format(location, name)
-    new_bed.saveas(out_file)
-
-    return out_file
-
-
-def filter_attribute_level_by_parent_worker(df, my_att, parent_att_value, sons_att_name, add_att_data_value,
-                                            filter_values):
-    filter_values[df.index] = add_att_data_value
-    sons_df = df[df[sons_att_name] == parent_att_value]
-    if len(sons_df) > 0:
-        for idx, row in sons_df.iterrows():
-            my_att_value = row[my_att]
-            x_df = df[(df["###start###"] >= row["###start###"]) & (df["###end###"] <= row["###end###"])]
-            filter_attribute_level_by_parent_worker(x_df, my_att, my_att_value, sons_att_name, add_att_data_value,
-                                                    filter_values)
-
-
-def remove_level(file, level):
-    default_columns = ["###chromosome###", "###source###", "###segment###", "###start###",
-                       "###end###", "###score###", "###strand###", "###frame###", "attributes"]
-    bed = BedTool(file)
-    name = os.path.splitext(os.path.basename(file))[0]
-    location = os.path.dirname(file)
-    bed_df = bed.to_dataframe(comment="#",
-                              names=default_columns,
-                              dtype={"###chromosome###": "str"})
-
-    bed_df = bed_df[~(bed_df["###segment###"] == level)]
-
-    new_bed = BedTool.from_dataframe(bed_df, na_rep=".")
-    out_file = "{}/{}.removed_sgement_{}.gff".format(location, name, level)
-    new_bed.saveas(out_file)
-
-    return out_file
-
-
-def sort_bed(file):
-    bed = BedTool(file)
-    name = os.path.splitext(os.path.basename(file))[0]
-    location = os.path.dirname(file)
-    bed = bed.sort()
-    out_file = "{}/{}.sorted.gff".format(location, name)
-    bed.saveas(out_file)
-
-    return out_file
-
-
-# Preprocess for other organisms
-def preprocess_mouse():
-    file = filter_attribute_level_by_parent(
-        "/mnt/gogenome/off-tov/databases/OtherOrganisms/GCF_000001635.26_GRCm38.p6_genomic_chr_names.gff",
-        "pseudogene", "ID", "Parent", "pseudo", True)
-    # file = sort_bed("/home/talmalu/Downloads/GCF_000001635.26_GRCm38.p6_genomic_chr_names.gff")
-    file = remove_level(file, "match")
-    file = add_attribute_level_by_parent(file, "gene", "ID", "Parent", "Name", "gene")
-    file = sort_bed(file)
-
-
-def preprocess_hamster():
-    file = filter_attribute_level_by_parent(
-        "/mnt/gogenome/off-tov/databases/OtherOrganisms/GCF_003668045.3_CriGri-PICRH-1.0_genomic_chr_names.gff",
-        "pseudogene", "ID", "Parent", "pseudo", True)
-    file = remove_level(file, "match")
-    file = add_attribute_level_by_parent(file, "gene", "ID", "Parent", "Name", "gene")
-    file = sort_bed(file)
-
-
-def preprocess_fly():
-    file = filter_attribute_level_by_parent(
-        "/mnt/gogenome/off-tov/databases/OtherOrganisms/GCF_905115235.1_iHerIll2.2.curated.20191125_genomic_chr_names"
-        ".gff",
-        "pseudogene", "ID", "Parent", "pseudo", True)
-    file = remove_level(file, "match")
-    file = add_attribute_level_by_parent(file, "gene", "ID", "Parent", "Name", "gene")
-    file = sort_bed(file)
-
-
-def preprocess_soybean():
-    file = filter_attribute_level_by_parent(
-        "/mnt/gogenome/off-tov/databases/OtherOrganisms/GCF_000004515.5_Glycine_max_v2.1_genomic_for_CRISPRIL.gff",
-        "pseudogene", "ID", "Parent", "pseudo", True)
-    file = remove_level(file, "match")
-    file = add_attribute_level_by_parent(file, "gene", "ID", "Parent", "Name", "gene")
-    file = sort_bed(file)
-
-
-def preprocess_tomato():
-    file = filter_attribute_level_by_parent(
-        "/mnt/gogenome/off-tov/databases/OtherOrganisms/M82_MAS2.0_gene_models.gff",
-        "pseudogene", "ID", "Parent", "pseudo", True)
-    file = remove_level(file, "match")
-    file = add_attribute_level_by_parent(file, "gene", "ID", "Parent", "Name", "gene")
-    file = sort_bed(file)
-
-
-def preprocess_prawn():
-    file = filter_attribute_level_by_parent(
-        "/mnt/gogenome/off-tov/databases/OtherOrganisms/MR_Maker_annotations_edited.gff",
-        "pseudogene", "ID", "Parent", "pseudo", True)
-    file = remove_level(file, "match")
-    file = add_attribute_level_by_parent(file, "gene", "ID", "Parent", "Name", "gene")
-    file = sort_bed(file)
 
 
 def parse_arg(argv):
@@ -1142,48 +943,6 @@ def main(argv):
         preprocess_target_scan()
         time_end = perf_counter()
         print("Total run for TargetScan: {}".format(timedelta(seconds=(time_end - time_start))))
-
-    if "mouse" in args.list:
-        print("Starting preprocess for mouse")
-        time_start = perf_counter()
-        preprocess_mouse()
-        time_end = perf_counter()
-        print("Total run for Mouse: {}".format(timedelta(seconds=(time_end - time_start))))
-
-    if "hamster" in args.list:
-        print("Starting preprocess for hamster")
-        time_start = perf_counter()
-        preprocess_hamster()
-        time_end = perf_counter()
-        print("Total run for hamster: {}".format(timedelta(seconds=(time_end - time_start))))
-
-    if "fly" in args.list:
-        print("Starting preprocess for fly")
-        time_start = perf_counter()
-        preprocess_fly()
-        time_end = perf_counter()
-        print("Total run for fly: {}".format(timedelta(seconds=(time_end - time_start))))
-
-    if "soybean" in args.list:
-        print("Starting preprocess for soybean")
-        time_start = perf_counter()
-        preprocess_soybean()
-        time_end = perf_counter()
-        print("Total run for soybean: {}".format(timedelta(seconds=(time_end - time_start))))
-
-    if "tomato" in args.list:
-        print("Starting preprocess for tomato")
-        time_start = perf_counter()
-        preprocess_tomato()
-        time_end = perf_counter()
-        print("Total run for tomato: {}".format(timedelta(seconds=(time_end - time_start))))
-
-    if "prawn" in args.list:
-        print("Starting preprocess for prawn")
-        time_start = perf_counter()
-        preprocess_prawn()
-        time_end = perf_counter()
-        print("Total run for prawn: {}".format(timedelta(seconds=(time_end - time_start))))
     # create_ensg_symbol_mapping()
 
 

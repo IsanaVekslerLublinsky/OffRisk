@@ -9,7 +9,7 @@ CONF_FILE = "{}/configuration_files/conf_param.json".format(APP_DIR)
 DB_NAME_LIST = ["gencode", "mirgene", "remapepd", "enhanceratlas", "pfam", "targetscan", "omim", "humantf",
                 "protein_atlas", "rbp", "cosmic"]
 
-YAML_CONFIG_FILE = "{}/configuration_files/off-tov-config.yaml".format(APP_DIR)
+YAML_CONFIG_FILE = "{}/configuration_files/off-risk-config.yaml".format(APP_DIR)
 """
 This file store default values and path for different variables used by this program.
 You can change the default values from here.

@@ -60,36 +60,6 @@ def off_target_body_9():
 
 
 @pytest.fixture(scope="module")
-def off_target_body_10():
-    return load_json(f"{BASE_DIR}/tests/templates/off_target_body_10.json")
-
-
-@pytest.fixture(scope="module")
-def off_target_body_11():
-    return load_json(f"{BASE_DIR}/tests/templates/off_target_body_11.json")
-
-
-@pytest.fixture(scope="module")
-def off_target_body_12():
-    return load_json(f"{BASE_DIR}/tests/templates/off_target_body_12.json")
-
-
-@pytest.fixture(scope="module")
-def off_target_body_13():
-    return load_json(f"{BASE_DIR}/tests/templates/off_target_body_13.json")
-
-
-@pytest.fixture(scope="module")
-def off_target_body_14():
-    return load_json(f"{BASE_DIR}/tests/templates/off_target_body_14.json")
-
-
-@pytest.fixture(scope="module")
-def off_target_body_10():
-    return load_json(f"{BASE_DIR}/tests/templates/off_target_body_9.json")
-
-
-@pytest.fixture(scope="module")
 def on_target_body_1():
     return load_json(f"{BASE_DIR}/tests/templates/on_target_body_1.json")
 

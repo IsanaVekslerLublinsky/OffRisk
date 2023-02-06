@@ -17,13 +17,11 @@ import warnings
 
 from configuration_files.const import FLASHFRY_INPUT_PATH, CAS_OFFINDER_OUTPUT_PATH, CAS_OFFINDER_INPUT_FILE_PATH, \
     FLASHFRY_OUTPUT_PATH, FLASHFRY_SCORE_OUTPUT_PATH, YAML_CONFIG_FILE
-from genome_extractor_factories import *
 from off_target import run_flashfry, run_cas_offinder_locally
 from db import update_database_base_path, get_database_path
 from helper import get_logger
 from off_tov import extract_data
-from obj_def import OffTargetList, AllDbResult, OtResponse, SitesList, DB_NAME_LIST, FlashFrySite, \
-    AllNoneHumanDbResult, OtNoneHumanResponse
+from obj_def import OffTargetList, AllDbResult, OtResponse, SitesList, DB_NAME_LIST, FlashFrySite
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 pd.options.mode.chained_assignment = None
 
@@ -54,7 +52,7 @@ def hello():
     Returns: a message
 
     """
-    return "Welcome to off-tov server"
+    return "Welcome to OffRisk server"
 
 
 @app.route("/v1/off-target-analyze/", methods=["POST"])
@@ -189,18 +187,7 @@ def analyze(dbs, genome, request_id, input_file=None, time_start=perf_counter())
                               off_targets=off_t_result["off_targets"],
                               all_result=all_db_result,
                               time=total_time.total_seconds())
-    else:
-        extractor = GenomeExtractorFactory().create_extractor(genome)
-        off_t_result, all_result = extractor.extract(db_name_list=['OtherOrganisms'], genome=genome,
-                                                     input_file=input_file)
-        time_end = perf_counter()
-        all_db_result = AllNoneHumanDbResult(**all_result.json)
-        total_time = timedelta(seconds=(time_end - time_start))
-        response = OtNoneHumanResponse(request_id=request_id,
-                                       flashfry_score=off_t_result["flashfry_score"],
-                                       off_targets=off_t_result["off_targets"],
-                                       all_result=all_db_result,
-                                       time=total_time.total_seconds())
+
 
     return make_response(jsonify(response.dict()), 200)
     # return response
@@ -402,7 +389,7 @@ def run_external_proc(args):
 
 #  this doesn't get executed inside the flask docker
 if __name__ == "__main__":
-    log.info("Starting to run off-tov server")
+    log.info("Starting to run off-risk server")
 
     # Only for debugging while developing
     app.run(host="0.0.0.0", debug=True, port=8002)

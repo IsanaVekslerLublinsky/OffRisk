@@ -2,17 +2,17 @@ version: "3.9"  # optional since v1.27.0
 services:
   off-risk-server:
     build:
-      context: /home/gilada/git_code/thesis/OffRisk/
+      context: ./OffRisk/
       dockerfile: Dockerfile
     ports:
       - "8123:80"
     volumes:
-      - /mnt/gogenome/off-tov/databases:/databases
+      - ./databases:/databases
     image: off-risk-server
 
   off-risk-ui:
     build:
-      context: /home/gilada/git_code/thesis/OffRisk-ui/
+      context: ./OffRisk-ui/
       dockerfile: Dockerfile
     ports:
      - "8501:8501"
