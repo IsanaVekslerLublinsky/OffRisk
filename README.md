@@ -24,7 +24,7 @@ The path for the volume with the database file need to be updates in the docker-
 
 for example:
 
-<path_to_database_folder>:/databases -> /user/gilad/off-tov/databases:/databases
+<path_to_database_folder>:/databases -> /user/gilad/off-risk/databases:/databases
 
 ~~~
 docker-compose up

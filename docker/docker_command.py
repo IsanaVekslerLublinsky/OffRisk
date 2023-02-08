@@ -55,12 +55,11 @@ def main(argv):
     if args.export:
         log.info("Starting to export")
         run_external_proc(["docker-compose", "build"])
-        run_external_proc(["docker", "save", "-o", "off-tov-server.tar", "off-tov-server:latest"])
-        run_external_proc(["docker", "save", "-o", "off-tov-ui.tar", "off-tov-ui:latest"])
-        run_external_proc(["tar", "cvzf", "off-tov-db.tar.gz", "/mnt/gogenome/off-tov/databases/",
-                           "--exclude-from", "exclude_file.txt"])
-        run_external_proc(["tar", "cvzf", "off-tov-files.tar.gz", "off-tov-server.tar", "off-tov-ui.tar",
-                           "off-tov-ui.tar"])
+        run_external_proc(["docker", "save", "-o", "off-risk-server.tar", "off-risk-server:latest"])
+        run_external_proc(["docker", "save", "-o", "off-risk-ui.tar", "off-risk-ui:latest"])
+        run_external_proc(["tar", "cvzf", "off-risk-db.tar.gz", "<path>"])
+        run_external_proc(["tar", "cvzf", "off-risk-files.tar.gz", "off-risk-server.tar", "off-risk-ui.tar",
+                           "off-risk-ui.tar"])
 
 
 if __name__ == '__main__':

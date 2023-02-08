@@ -1,5 +1,6 @@
 from __future__ import annotations
 import numpy as np
+import pandas as pd
 import logging
 import os
 import re
@@ -8,7 +9,6 @@ from flask import jsonify, Flask
 from pybedtools import BedTool
 from configuration_files.const import BASE_DIR, COMPLETE_GENOME_URL, COMPLETE_GENOME_PATH
 from abc import abstractmethod
-from db_query_results import *
 from helper import get_logger, extract_gz_file
 
 log = get_logger(logger_name=__name__, debug_level=logging.DEBUG)
@@ -710,30 +710,6 @@ class ANonHumanDB(object):
 
     def get_db_name(self):
         return self.name
-
-
-class GffDB(ANonHumanDB):
-
-    def __init__(self, name, file_location, columns):
-        file_path = "{}/{}".format(database_base_path, file_location)
-        super().__init__(name, file_path, columns)
-
-    def select(self, query):
-        df_results = query.execute_gffdb(self)
-        if df_results is not None:
-            return DBDataFrameResult(df_results)
-
-        return None
-
-
-class DataFrameDB(ANonHumanDB):
-
-    def select(self, query):
-        df_results = query.execute_dataframedb(self)
-        if df_results:
-            return DBDataFrameResult(df_results)
-
-        return None
 
 
 def separate_attribute(line):

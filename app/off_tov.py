@@ -190,7 +190,7 @@ def main():
         log_level = logging.DEBUG
     init_logger(debug_level=log_level, logger_name="Base_log")
 
-    log.info("Starting to run off-tov locally")
+    log.info("Starting to run off-risk locally")
 
     try:
         # Update database base directory path

@@ -15,13 +15,6 @@ class ProcessedResult(BaseModel):
     data: Union[Json, List, str] = None
 
 
-class AllNoneHumanDbResult(BaseModel):
-    """
-    Object definition for structure of a database object
-    """
-    S3_result_list: List[ProcessedResult] = None
-
-
 class AllDbResult(BaseModel):
     """
     Object definition for structure of all databases object
@@ -48,24 +41,6 @@ class OtResponse(BaseModel):
     flashfry_score: Json  # If FlashFry was used, Dataframe with the result of the score
     all_result: AllDbResult  # All the databases inforamtion
     time: float  # Totoal time for running the analysis
-
-
-class OtNoneHumanResponse(BaseModel):
-    """
-    Object definition for response from the server with the result for each off-target
-    """
-    request_id: int
-    off_targets: Json
-    flashfry_score: Json
-    all_result: AllNoneHumanDbResult
-    time: float
-
-    @validator("off_targets")
-    def val_off_targets(cls, v):
-        for item in v:
-            if item['chromosome'].startswith('chr'):
-                item['chromosome'] = item['chromosome'][3:]
-        return v
 
 
 class OffTarget(BaseModel):

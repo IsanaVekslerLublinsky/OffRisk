@@ -6,7 +6,7 @@ import json
 def test_get_root(server):
     r = httpx.get(server)
     assert r.status_code == 200
-    assert r.text == "Welcome to off-tov server"
+    assert r.text == "Welcome to OffRisk server"
 
 
 @pytest.mark.parametrize("run_type, body", [("off", "off_target_body_1"),
@@ -18,11 +18,6 @@ def test_get_root(server):
                                             ("off", "off_target_body_7"),
                                             ("off", "off_target_body_8"),
                                             ("off", "off_target_body_9"),
-                                            ("off", "off_target_body_10"),
-                                            ("off", "off_target_body_11"),
-                                            ("off", "off_target_body_12"),
-                                            ("off", "off_target_body_13"),
-                                            ("off", "off_target_body_14"),
                                             ("on", "on_target_body_1"),
                                             ("on", "on_target_body_2")])
 def test_off_target(server, run_type, body, request):

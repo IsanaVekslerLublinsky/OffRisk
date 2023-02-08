@@ -150,10 +150,10 @@ def run_external_proc(args):
                 function_name, args, output.decode(), err.decode()))
 
 
-def run_cas_offinder_api(server_address="http://apps-dev.crispr-il.local/off-tov/"):
+def run_cas_offinder_api(server_address=""):
     """
     Run cas offinder from a server with api.
-    Important! the server must be off-tov server otherwise the request will not work
+    Important! the server must be off-risk server otherwise the request will not work
 
     server_address: need to be the full address with port
     """
