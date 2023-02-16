@@ -82,7 +82,8 @@ def extract_data(db_name_list, input_file=None):
         off_target_df["name"] = off_target_df.index
         off_target_bed = BedTool.from_dataframe(off_target_df, na_rep=".").sort()
     else:
-        raise Exception("Off target dataframe is empty. Please verify there is files in the output folder")
+        raise \
+            pd.errors.EmptyDataError("Off target dataframe is empty. Please verify there is files in the output folder")
 
     # Initialize the result
     db_list = []

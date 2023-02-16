@@ -178,16 +178,18 @@ def analyze(dbs, genome, request_id, input_file=None, time_start=perf_counter())
         db_name_list = dbs
 
     if genome == 'human':
-        off_t_result, all_result = extract_data(db_name_list=db_name_list, input_file=input_file)
-        time_end = perf_counter()
-        all_db_result = AllDbResult(**all_result.json)
-        total_time = timedelta(seconds=(time_end - time_start))
-        response = OtResponse(request_id=request_id,
-                              flashfry_score=off_t_result["flashfry_score"],
-                              off_targets=off_t_result["off_targets"],
-                              all_result=all_db_result,
-                              time=total_time.total_seconds())
-
+        try:
+            off_t_result, all_result = extract_data(db_name_list=db_name_list, input_file=input_file)
+            time_end = perf_counter()
+            all_db_result = AllDbResult(**all_result.json)
+            total_time = timedelta(seconds=(time_end - time_start))
+            response = OtResponse(request_id=request_id,
+                                  flashfry_score=off_t_result["flashfry_score"],
+                                  off_targets=off_t_result["off_targets"],
+                                  all_result=all_db_result,
+                                  time=total_time.total_seconds())
+        except pd.errors.EmptyDataError:
+            return make_response({}, 204)
 
     return make_response(jsonify(response.dict()), 200)
     # return response
