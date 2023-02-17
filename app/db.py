@@ -825,8 +825,8 @@ def save_global_off_target_results(off_target_df, flashfry_score, columns_order=
             if value not in off_target_df.columns:
                 off_target_df[value] = ""
         off_target_df = off_target_df[columns_order]
-    if flashfry_score and len(flashfry_score):
-        flashfry_score.to_json(orient="records")
+    if flashfry_score is not None:
+        flashfry_score = flashfry_score.to_json(orient="records")
     else:
         flashfry_score = pd.DataFrame().to_json()
     save_result = {"off_targets": off_target_df.to_json(orient="records"),
