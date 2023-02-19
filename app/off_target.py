@@ -84,10 +84,14 @@ def load_flashfry_off_target():
         tmp_ot_df["start"] = tmp_ot_df["tmp"].apply(lambda s: s.split(":")[1].split("^")[0])
         tmp_ot_df["end"] = tmp_ot_df.apply(lambda s: int(s["start"]) + len(s[0].split("_")[0]), axis=1)
         tmp_ot_df["strand"] = tmp_ot_df["tmp"].apply(lambda s: s.split("^")[1].strip(">"))
-        tmp_ot_df["strand"] = tmp_ot_df["strand"].apply(lambda s: "+" if s == "F" else "-")
+        tmp_ot_df["strand"] = tmp_ot_df["strand"].apply(lambda s: "+" if s == "F" else "se-")
+        tmp_ot_df["mismatch"] = tmp_ot_df.apply(lambda s: "mismatch={}".format(s[0].split("_")[2].split("<")[0]), axis=1)
+        tmp_ot_df["occurrence"] = tmp_ot_df.apply(lambda s: "occurrence={}".format(s[0].split("_")[1]), axis=1)
         tmp_ot_df.loc[:, "name"] = ""
         tmp_ot_df.loc[:, "score"] = 0
         tmp_ot_df.loc[:, "attributes"] = "contig={};target={}".format(row["contig"], row["target"])
+        tmp_ot_df.loc[:, "attributes"] = tmp_ot_df.apply(
+            lambda s: ";".join([str(s["attributes"]), str(s["mismatch"]), str(s["occurrence"])]), axis=1)
         # Order the DataFrame
         tmp_ot_df.drop(["tmp"], axis=1, inplace=True)
         tmp_ot_df = tmp_ot_df[["chromosome", "start", "end", "name", "score", "strand", "attributes"]]
