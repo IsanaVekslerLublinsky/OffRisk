@@ -25,7 +25,7 @@ pd.options.mode.chained_assignment = None
 log = logging.getLogger("Base_log")
 
 
-def extract_data(db_name_list, input_file=None):
+def extract_data(db_name_list, off_target_df = None):
     """
     Run intersection between the off-target file to other databases specified in db_name_list
 
@@ -33,48 +33,8 @@ def extract_data(db_name_list, input_file=None):
     """
     log.debug("Starting to extract data")
 
-    off_target_df = None
     flashfry_score = pd.DataFrame()
     time_start = perf_counter()
-
-    if input_file:
-        log.info("Loading off-target from a file in: {}".format(input_file))
-        if path.exists(input_file):
-            off_target_df = load_off_target_from_file(input_file)
-        else:
-            raise Exception("There is no file in the path: {}. Please verify the file was created."
-                            .format(CAS_OFFINDER_OUTPUT_PATH))
-    else:
-        log.info("Loading local off-target")
-        off_target_co_df, off_target_ff_df = None, None
-        if path.exists(CAS_OFFINDER_OUTPUT_PATH):
-            off_target_co_df = load_cas_offinder_off_target()
-        if path.exists(FLASHFRY_OUTPUT_PATH):
-            off_target_ff_df, flashfry_score = load_flashfry_off_target()
-
-        # If both files was loaded, merge them
-        if (off_target_co_df is not None) & (off_target_ff_df is not None):
-            off_target_df = pd.concat([off_target_co_df, off_target_ff_df])
-            off_target_df = off_target_df.astype({OffTarget.get_field_title("chromosome"): "category",
-                                                  OffTarget.get_field_title("start"): int,
-                                                  OffTarget.get_field_title("end"): int,
-                                                  OffTarget.get_field_title("strand"): "category"})
-            off_target_df.drop_duplicates(subset=[OffTarget.get_field_title("chromosome"),
-                                                  OffTarget.get_field_title("start"),
-                                                  OffTarget.get_field_title("end"),
-                                                  OffTarget.get_field_title("strand")], inplace=True)
-
-        elif off_target_co_df is not None:
-            off_target_df = off_target_co_df
-        elif off_target_ff_df is not None:
-            off_target_df = off_target_ff_df
-        if off_target_df is not None:
-            off_target_df[OffTarget.get_field_title("chromosome")] = \
-                off_target_df[OffTarget.get_field_title("chromosome")].apply(lambda s: s.strip("chr"))
-            if OffTarget.get_field_title("id") not in off_target_df.columns:
-                off_target_df[OffTarget.get_field_title("id")] = "."
-            if OffTarget.get_field_title("sequence") not in off_target_df.columns:
-                off_target_df[OffTarget.get_field_title("sequence")] = "."
 
     # Create the bed file
     if off_target_df is not None:

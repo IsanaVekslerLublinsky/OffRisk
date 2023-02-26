@@ -17,10 +17,11 @@ import warnings
 
 from configuration_files.const import FLASHFRY_INPUT_PATH, CAS_OFFINDER_OUTPUT_PATH, CAS_OFFINDER_INPUT_FILE_PATH, \
     FLASHFRY_OUTPUT_PATH, FLASHFRY_SCORE_OUTPUT_PATH, YAML_CONFIG_FILE
-from off_target import run_flashfry, run_cas_offinder_locally
+from off_target import run_flashfry, run_cas_offinder_locally, load_off_target_from_file, \
+    load_off_target_from_cas_offinder_and_flashfry, write_cas_offinder_input
 from db import update_database_base_path, get_database_path
 from helper import get_logger
-from off_tov import extract_data
+from off_risk import extract_data
 from obj_def import OffTargetList, AllDbResult, OtResponse, SitesList, DB_NAME_LIST, FlashFrySite
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 pd.options.mode.chained_assignment = None
@@ -86,7 +87,9 @@ def off_target_analyze(**kwargs):
         input_file_df = pd.DataFrame([dict(s) for s in body["off_targets"]])
         input_file_df.to_csv(tempinput_file, sep="\t", index=False)
         tempinput_file.close()
-        response = analyze(dbs, body["organism"], body["request_id"], tempinput_file.name, time_start)
+        log.info("Loading off-target from a file in: {}".format(tempinput_file.name))
+        off_target_df = load_off_target_from_file(tempinput_file.name)
+        response = analyze(dbs, body["organism"], body["request_id"], off_target_df, time_start)
 
     finally:
         os.remove(tempinput_file.name)
@@ -115,51 +118,57 @@ def analyze_ot(**kwargs):
     log.info("Got new request: {}".format(body))
     tools_list = body["search_tools"]
 
+    cas_offinder_output = None
+    flashfry_output = None
+    flashfry_score = None
+
     if "cas_offinder" in tools_list:
+
         # Create the input file for cas-offinder
         seqs = ",".join(["{} {}".format(s["sequence"], s["mismatch"]) for s in body["sites"]])
         pattern = "{} {} {}".format(body["pattern"], body["pattern_dna_bulge"], body["pattern_rna_bulge"])
         genome_type = conf_yaml["cas_offinder"]["default_genome"]
 
-        path_out = CAS_OFFINDER_OUTPUT_PATH
-        if os.path.exists(path_out):
-            log.info("Removing already existed output file")
-            os.remove(path_out)
+        if genome_type not in conf_yaml["genomes"]:
+            log.info("genome_type {} is not supported".format(genome_type))
+            raise Exception(
+                "No such genome {}. Allowed genome: {}".format(genome_type, list(conf_yaml["genomes"].keys())))
 
-        path_in = CAS_OFFINDER_INPUT_FILE_PATH
+        docker_path_to_genome = conf_yaml["genomes"][genome_type]
+
+
         # Run Cas-Offinder
         try:
-            fd_in, path_in = write_cas_offinder_input(pattern, seqs, genome_type, input_file=path_in)
-            run_cas_offinder_locally("C")
+            cas_offinder_output = run_cas_offinder_locally("C", pattern, seqs, docker_path_to_genome)
             log.info("Finish running cas-offinder")
-            os.remove(path_in) if os.path.exists(path_in) else None
         except Exception as e:
             log.error("An error has occurred while running cas-offinder {}".format(e))
-            log.debug("input file is: {}, output file is: {}".format(path_in, path_out))
 
+    off_target_df = None
     if "flashfry" in tools_list:
         try:
-            run_flashfry_from_server(body=body)
+            flashfry_output, flashfry_score = run_flashfry_from_server(body)
             # Remove input file
             log.info("Finish running FlashFry")
-            os.remove(FLASHFRY_INPUT_PATH) if os.path.exists(FLASHFRY_INPUT_PATH) else None
         except Exception as e:
-            log.error("An error has occurred while running cas-offinder {}".format(e))
+            log.error("An error has occurred while running flashfry {}".format(e))
 
     # analyze
-    response = analyze(dbs, "human", body["request_id"], time_start=time_start)
+    off_target_df = load_off_target_from_cas_offinder_and_flashfry(cas_offinder_output=cas_offinder_output,
+                                                                   flashfry_output=flashfry_output,
+                                                                   flashfry_score=flashfry_score)
+
+    response = analyze(dbs, "human", body["request_id"], off_target_df, time_start=time_start)
     time_end = perf_counter()
     log.info("Total run: {}".format(timedelta(seconds=(time_end - time_start))))
 
     # Remove output files
     log.info("Cleaning the environment")
-    os.remove(FLASHFRY_OUTPUT_PATH) if os.path.exists(FLASHFRY_OUTPUT_PATH) else None
-    os.remove(FLASHFRY_SCORE_OUTPUT_PATH) if os.path.exists(FLASHFRY_SCORE_OUTPUT_PATH) else None
     os.remove(CAS_OFFINDER_OUTPUT_PATH) if os.path.exists(CAS_OFFINDER_OUTPUT_PATH) else None
     return response
 
 
-def analyze(dbs, genome, request_id, input_file=None, time_start=perf_counter()):
+def analyze(dbs, genome, request_id, off_target_df, time_start=perf_counter()):
     """
     Analyze the off-target with extract_data function
     Args:
@@ -179,7 +188,7 @@ def analyze(dbs, genome, request_id, input_file=None, time_start=perf_counter())
 
     if genome == 'human':
         try:
-            off_t_result, all_result = extract_data(db_name_list=db_name_list, input_file=input_file)
+            off_t_result, all_result = extract_data(db_name_list=db_name_list, off_target_df=off_target_df)
             time_end = perf_counter()
             all_db_result = AllDbResult(**all_result.json)
             total_time = timedelta(seconds=(time_end - time_start))
@@ -209,9 +218,8 @@ def flashfry(**kwargs):
     body = body.dict()
     log.info("Got new request: {}".format(body))
     try:
-        run_flashfry_from_server(body)
-        flashfry_output = pd.read_csv(FLASHFRY_OUTPUT_PATH, sep="\t")
-        flashfry_score = pd.read_csv(FLASHFRY_SCORE_OUTPUT_PATH, sep="\t")
+        flashfry_output, flashfry_score = run_flashfry_from_server(body)
+
         time_end = perf_counter()
         log.info("Total run: {}".format(timedelta(seconds=(time_end - time_start))))
         response = {"flashfry-discover": flashfry_output.to_json(), "flashfry-score": flashfry_score.to_json(),
@@ -226,11 +234,6 @@ def flashfry(**kwargs):
         # response = {"flashfry-dataframe": pd.DataFrame().to_json(), "message": message}
         # return JSONResponse(content=response, status_code=400)
 
-    finally:
-        os.remove(FLASHFRY_OUTPUT_PATH) if os.path.exists(FLASHFRY_OUTPUT_PATH) else None
-        os.remove(FLASHFRY_SCORE_OUTPUT_PATH) if os.path.exists(FLASHFRY_SCORE_OUTPUT_PATH) else None
-        os.remove(FLASHFRY_INPUT_PATH) if os.path.exists(FLASHFRY_INPUT_PATH) else None
-
 
 def run_flashfry_from_server(body):
     """
@@ -239,19 +242,11 @@ def run_flashfry_from_server(body):
         body: FlashFrySite object
     """
 
-    # Create the input file for flashfry
-    flashfry_input_list = list()
-    for i, site in enumerate(body["sites"]):
-        next_line = "" if i == 0 else "\n"
-        flashfry_input_list.append("{}>sequence_{}\n{}".format(next_line, i, site["sequence"]))
-
-    flashfry_input_file_path = FLASHFRY_INPUT_PATH
-    with open(flashfry_input_file_path, "w") as tmp_in:
-        for line in flashfry_input_list:
-            tmp_in.write(line)
-
     # Run FlashFry
-    run_flashfry(database_path=get_database_path(), commands=["discover", "score"])
+    flashfry_output = run_flashfry(database_path=get_database_path(), sites=body["sites"], command="discover")
+    flashfry_score = run_flashfry(database_path=get_database_path(), command="score", flashfry_output_df=flashfry_output)
+
+    return flashfry_output, flashfry_score
 
 
 @app.route("/v1/cas-offinder-bulge/", methods=["GET"])
@@ -264,6 +259,7 @@ def cas_offinder_bulge():
     """
 
     log.info("Got new request for cas-offinder bulge. Starting to work")
+    log.info(request.args)
     return run_cas_offinder_server(request.args, "bulge")
     # todo: fix this issue - convert request ars from Flask to Fastapi
     # return run_cas_offinder_server(request.query_params, "bulge")
@@ -290,13 +286,20 @@ def run_cas_offinder_server(received_request, cas_offinder_type="default"):
     seqs = received_request.get("sequences")
     off_target_df = pd.DataFrame()
     path_in, path_out = "", ""
+
+    if genome_type not in conf_yaml["genomes"]:
+        log.info("genome_type {} is not supported".format(genome_type))
+        raise Exception(
+            "No such genome {}. Allowed genome: {}".format(genome_type, list(conf_yaml["genomes"].keys())))
+
+    docker_path_to_genome = conf_yaml["genomes"][genome_type]
+
     try:
-        fd_in, path_in = write_cas_offinder_input(pattern, seqs, genome_type)
-        path_out = "{}.out".format(path_in)
-        run_external_proc(cas_offinder_proc + [path_in, "C", path_out])
-        if os.path.exists(path_out):
-            off_target_df = pd.read_csv(path_out, sep="\t")
-            log.info("Finish running cas-offinder")
+
+        cas_offinder_output = run_cas_offinder_locally(pattern, seqs, docker_path_to_genome)
+        off_target_df = cas_offinder_output
+        log.info("Finish running cas-offinder")
+
     except Exception as e:
         message = "An error has occurred while running cas-offinder {}".format(e)
         log.error(message)
@@ -311,34 +314,6 @@ def run_cas_offinder_server(received_request, cas_offinder_type="default"):
     return make_response(jsonify(response), 200)
     # return response
 
-
-def write_cas_offinder_input(pattern, seqs, genome_type, input_file=None):
-    """
-    Create input file for cas-offinder
-    Args:
-        pattern: desired pattern including PAM site and optional DNA or RNA bulge sizes, separated by spaces.
-        seqs: query sequences and maximum mismatch numbers, separated by spaces, each sequence is separate with ","
-        genome_type: which genome type to run. default is human GRCH38
-        input_file: path to input file. if None then create the path here.
-
-    Returns: io file and path
-    """
-    if genome_type not in conf_yaml["genomes"]:
-        log.info("genome_type {} is not supported".format(genome_type))
-        raise Exception("No such genome {}. Allowed genome: {}".format(genome_type, list(conf_yaml["genomes"].keys())))
-
-    docker_path_to_genome = conf_yaml["genomes"][genome_type]
-    fd_in = None
-    if input_file is None:
-        fd_in, input_file = tempfile.mkstemp()
-    with open(input_file, "w") as tmp_in:
-        tmp_in.write("{}\n".format(docker_path_to_genome))
-        tmp_in.write("{}".format(pattern))
-
-        for line in seqs.split(","):
-            tmp_in.write("\n")
-            tmp_in.write(line)
-    return fd_in, input_file
 
 
 def validate_received_request(received_request):
