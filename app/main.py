@@ -4,37 +4,33 @@ import re
 import subprocess
 import sys
 import tempfile
+import warnings
 from datetime import timedelta
 from time import perf_counter
+
 import pandas as pd
 import yaml
 from flask import Flask, request, make_response, jsonify
-# import uvicorn
-# from fastapi import FastAPI, Request, Response
-# from fastapi.responses import JSONResponse
 from pydantic_webargs import webargs
-import warnings
 
-from configuration_files.const import FLASHFRY_INPUT_PATH, CAS_OFFINDER_OUTPUT_PATH, CAS_OFFINDER_INPUT_FILE_PATH, \
-    FLASHFRY_OUTPUT_PATH, FLASHFRY_SCORE_OUTPUT_PATH, YAML_CONFIG_FILE
-from off_target import run_flashfry, run_cas_offinder_locally, load_off_target_from_file, \
-    load_off_target_from_cas_offinder_and_flashfry, write_cas_offinder_input
+from configuration_files.const import CAS_OFFINDER_OUTPUT_PATH, YAML_CONFIG_FILE
 from db import update_database_base_path, get_database_path
 from helper import get_logger
-from off_risk import extract_data
 from obj_def import OffTargetList, AllDbResult, OtResponse, SitesList, DB_NAME_LIST, FlashFrySite
+from off_risk import extract_data
+from off_target import run_flashfry, run_cas_offinder_locally, load_off_target_from_file, \
+    load_off_target_from_cas_offinder_and_flashfry
+
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 pd.options.mode.chained_assignment = None
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(CURRENT_DIR))
 
-
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 app = Flask(__name__)
 app.config["JSON_SORT_KEYS"] = False
-# app = FastAPI()
 
 log = get_logger(logger_name=__name__, debug_level=logging.DEBUG)
 
@@ -46,7 +42,6 @@ update_database_base_path(conf_yaml["databases"]["base_path"])
 
 
 @app.route("/")
-# @app.get("/")
 def hello():
     """
     Home page
@@ -59,8 +54,6 @@ def hello():
 @app.route("/v1/off-target-analyze/", methods=["POST"])
 @webargs(body=OffTargetList)
 def off_target_analyze(**kwargs):
-    # @app.post("/v1/off-target-analyze/")
-    # def off_target_analyze(body: OffTargetList):
     """
     Analyze off-target request. Receive off-target sites.
     Returns: OtResponse object - off-target analysis
@@ -102,8 +95,6 @@ def off_target_analyze(**kwargs):
 @app.route("/v1/on-target-analyze/", methods=["POST"])
 @webargs(body=SitesList)
 def analyze_ot(**kwargs):
-    # @app.post("/v1/on-target-analyze/")
-    # def analyze_ot(body: SitesList):
     """
     Analyze on-target request. Receive sequences to search for off-target with FlashFry and Cas-Offinder,
     and then analyze them
@@ -135,7 +126,6 @@ def analyze_ot(**kwargs):
                 "No such genome {}. Allowed genome: {}".format(genome_type, list(conf_yaml["genomes"].keys())))
 
         docker_path_to_genome = conf_yaml["genomes"][genome_type]
-
 
         # Run Cas-Offinder
         try:
@@ -207,8 +197,6 @@ def analyze(dbs, genome, request_id, off_target_df, time_start=perf_counter()):
 @app.route("/v1/flashfry/", methods=["POST"])
 @webargs(body=FlashFrySite)
 def flashfry(**kwargs):
-    # @app.post("/v1/flashfry/")
-    # def flashfry(body: FlashFrySite):
     """
     Run FlashFry for discover and score option.
     Returns: Dataframe with the result from discover and score
@@ -244,15 +232,14 @@ def run_flashfry_from_server(body):
 
     # Run FlashFry
     flashfry_output = run_flashfry(database_path=get_database_path(), sites=body["sites"], command="discover")
-    flashfry_score = run_flashfry(database_path=get_database_path(), command="score", flashfry_output_df=flashfry_output)
+    flashfry_score = run_flashfry(database_path=get_database_path(), command="score",
+                                  flashfry_output_df=flashfry_output)
 
     return flashfry_output, flashfry_score
 
 
 @app.route("/v1/cas-offinder-bulge/", methods=["GET"])
 def cas_offinder_bulge():
-    # @app.get("/v1/cas-offinder-bulge/")
-    # def cas_offinder_bulge(request: Request):
     """
     Run cas-offinder-bulge
     Returns: on success A json format file of the result dataframe and the output from the program. on failure the error
@@ -315,7 +302,6 @@ def run_cas_offinder_server(received_request, cas_offinder_type="default"):
     # return response
 
 
-
 def validate_received_request(received_request):
     """
     Validate the received request for Cas-Offinder
@@ -370,4 +356,3 @@ if __name__ == "__main__":
 
     # Only for debugging while developing
     app.run(host="0.0.0.0", debug=True, port=8002)
-    # uvicorn.run("app.main:app", host="0.0.0.0", port=8002)

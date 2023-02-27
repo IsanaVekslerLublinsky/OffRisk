@@ -1,23 +1,17 @@
 version: "3.9"  # optional since v1.27.0
 services:
   off-risk-server:
-    build:
-      context: ./OffRisk/
-      dockerfile: Dockerfile
     ports:
       - "8123:80"
     volumes:
-      - ./databases:/databases
+      - <path_to_database_folder>/databases:/databases
     image: off-risk-server
 
   off-risk-ui:
-    build:
-      context: ./OffRisk-ui/
-      dockerfile: Dockerfile
     ports:
      - "8501:8501"
     image: off-risk-ui
 networks:
  default:
    external:
-    name: off-risk-net
+    name: OffRisk-net
