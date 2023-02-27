@@ -144,11 +144,12 @@ def analyze_ot(**kwargs):
             log.error("An error has occurred while running flashfry {}".format(e))
 
     # analyze
-    off_target_df = load_off_target_from_cas_offinder_and_flashfry(cas_offinder_output=cas_offinder_output,
-                                                                   flashfry_output=flashfry_output,
-                                                                   flashfry_score=flashfry_score)
+    off_target_df, flashfry_score = load_off_target_from_cas_offinder_and_flashfry(
+        cas_offinder_output=cas_offinder_output,
+        flashfry_output=flashfry_output,
+        flashfry_score=flashfry_score)
 
-    response = analyze(dbs, "human", body["request_id"], off_target_df, time_start=time_start)
+    response = analyze(dbs, "human", body["request_id"], off_target_df, time_start, flashfry_score)
     time_end = perf_counter()
     log.info("Total run: {}".format(timedelta(seconds=(time_end - time_start))))
 
@@ -158,7 +159,7 @@ def analyze_ot(**kwargs):
     return response
 
 
-def analyze(dbs, genome, request_id, off_target_df, time_start=perf_counter()):
+def analyze(dbs, genome, request_id, off_target_df, time_start=perf_counter(), flashfry_score=pd.DataFrame()):
     """
     Analyze the off-target with extract_data function
     Args:
@@ -178,7 +179,8 @@ def analyze(dbs, genome, request_id, off_target_df, time_start=perf_counter()):
 
     if genome == 'human':
         try:
-            off_t_result, all_result = extract_data(db_name_list=db_name_list, off_target_df=off_target_df)
+            off_t_result, all_result = extract_data(db_name_list=db_name_list, off_target_df=off_target_df,
+                                                    flashfry_score=flashfry_score)
             time_end = perf_counter()
             all_db_result = AllDbResult(**all_result.json)
             total_time = timedelta(seconds=(time_end - time_start))

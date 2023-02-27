@@ -1,23 +1,20 @@
-import sys
-from datetime import timedelta
-from time import perf_counter
-import pandas as pd
 import logging
-from os import path
+import logging
 import traceback
 import warnings
+from datetime import timedelta
+from time import perf_counter
+
+import pandas as pd
 import yaml
 from pybedtools import BedTool
 
-from helper import ConfigurationFile, init_logger, update_cas_offinder_path, update_flashfry_path
-from configuration_files.const import DB_NAME_LIST, CONF_FILE, CAS_OFFINDER_OUTPUT_PATH, FLASHFRY_OUTPUT_PATH, \
-    YAML_CONFIG_FILE
+from configuration_files.const import DB_NAME_LIST, CONF_FILE, YAML_CONFIG_FILE
 from db import GencodeDb, OmimDb, MirGeneDB, HumanTFDb, ProteinAtlas, RBP, COSMIC, ReMapEPD, EnhancerAtlas, Pfam, \
     initialize_off_target_df, analyze_with_id_list, add_db, calculate_score, save_global_off_target_results, \
     save_db_result, update_database_base_path, get_database_path, TargetScan
-from off_target import run_flashfry, run_cas_offinder_api, run_cas_offinder_locally, load_off_target_from_file, \
-    load_cas_offinder_off_target, load_flashfry_off_target
-from obj_def import OffTarget
+from helper import ConfigurationFile, init_logger, update_cas_offinder_path, update_flashfry_path
+from off_target import run_flashfry, run_cas_offinder_api, run_cas_offinder_locally
 
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 pd.options.mode.chained_assignment = None
@@ -25,7 +22,7 @@ pd.options.mode.chained_assignment = None
 log = logging.getLogger("Base_log")
 
 
-def extract_data(db_name_list, off_target_df = None):
+def extract_data(db_name_list, off_target_df=None, flashfry_score=pd.DataFrame()):
     """
     Run intersection between the off-target file to other databases specified in db_name_list
 
@@ -33,7 +30,6 @@ def extract_data(db_name_list, off_target_df = None):
     """
     log.debug("Starting to extract data")
 
-    flashfry_score = pd.DataFrame()
     time_start = perf_counter()
 
     # Create the bed file

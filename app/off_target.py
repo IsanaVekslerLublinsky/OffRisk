@@ -1,16 +1,17 @@
 import logging
+import os
 import subprocess
+import tempfile
 from datetime import timedelta
 from time import perf_counter
-from bs4 import BeautifulSoup
+
 import pandas as pd
 import requests
-import tempfile
-import os
+from bs4 import BeautifulSoup
+
 import configuration_files.const as const
 from configuration_files.const import FLASHFRY_TMP_LOCATION_PATH, FLASHFRY_DATABASE_BASE_PATH, \
-    COMPLETE_GENOME_PATH, FLASHFRY_INPUT_PATH, FLASHFRY_OUTPUT_PATH, FLASHFRY_SCORE_OUTPUT_PATH, \
-    CAS_OFFINDER_INPUT_FILE_PATH, CAS_OFFINDER_OUTPUT_PATH, BASE_DIR
+    COMPLETE_GENOME_PATH, BASE_DIR
 from obj_def import OffTarget
 
 log = logging.getLogger("Base_log")
@@ -51,7 +52,7 @@ def load_off_target_from_cas_offinder_and_flashfry(flashfry_output=None, flashfr
         if OffTarget.get_field_title("sequence") not in off_target_df.columns:
             off_target_df[OffTarget.get_field_title("sequence")] = "."
 
-    return off_target_df
+    return off_target_df, flashfry_score
 
 
 def load_cas_offinder_off_target(cas_offinder_output=None, cas_offinder_output_file=None):
@@ -63,7 +64,6 @@ def load_cas_offinder_off_target(cas_offinder_output=None, cas_offinder_output_f
     function_name = "load_cas_offinder_off_target"
     log.debug("Entering {}".format(function_name))
 
-    log.debug(cas_offinder_output)
     if cas_offinder_output is None:
         if cas_offinder_output_file is None:
             cas_offinder_output = pd.DataFrame()
