@@ -2,17 +2,18 @@ import logging
 import subprocess
 from datetime import timedelta
 from time import perf_counter
-from bs4 import BeautifulSoup
+
 import pandas as pd
 import requests
 import tempfile
 import os
 import re
 import itertools
+from bs4 import BeautifulSoup
+
 import configuration_files.const as const
 from configuration_files.const import FLASHFRY_TMP_LOCATION_PATH, FLASHFRY_DATABASE_BASE_PATH, \
-    COMPLETE_GENOME_PATH, FLASHFRY_INPUT_PATH, FLASHFRY_OUTPUT_PATH, FLASHFRY_SCORE_OUTPUT_PATH, \
-    CAS_OFFINDER_INPUT_FILE_PATH, CAS_OFFINDER_OUTPUT_PATH, BASE_DIR
+    COMPLETE_GENOME_PATH, BASE_DIR
 from obj_def import OffTarget
 
 log = logging.getLogger("Base_log")
@@ -26,12 +27,12 @@ def load_off_target_from_databases(flashfry_output = None, flashfry_score = None
     log.info("Loading local off-target")
     off_target_df = None
 
-
     off_target_co_df = load_cas_offinder_off_target(cas_offinder_output, cas_offinder_output_file)
 
     off_target_ci_df = load_crispritz_off_target(crispritz_output, crispritz_output_file)
 
-    off_target_ff_df, flashfry_score = load_flashfry_off_target(flashfry_output, flashfry_score, flashfry_output_file, flashfry_score_output_file)
+    off_target_ff_df, flashfry_score = load_flashfry_off_target(flashfry_output, flashfry_score, flashfry_output_file,
+                                                                flashfry_score_output_file)
 
     # If both files was loaded, merge them
     if (off_target_co_df is not None) or (off_target_ff_df is not None) or (off_target_ci_df is not None):
@@ -53,7 +54,8 @@ def load_off_target_from_databases(flashfry_output = None, flashfry_score = None
         if OffTarget.get_field_title("sequence") not in off_target_df.columns:
             off_target_df[OffTarget.get_field_title("sequence")] = "."
 
-    return off_target_df
+    return off_target_df, flashfry_score
+
 
 def load_crispritz_off_target(crispritz_output = None, crispritz_output_file = None):
     """
@@ -87,7 +89,7 @@ def load_crispritz_off_target(crispritz_output = None, crispritz_output_file = N
     off_target_df = off_target_df[["chromosome", "start", "end", "name", "score", "strand"]]
     return off_target_df
 
-def load_cas_offinder_off_target(cas_offinder_output = None, cas_offinder_output_file = None):
+def load_cas_offinder_off_target(cas_offinder_output=None, cas_offinder_output_file=None):
     """
     Take the off-target file from cas-offinder and convert it to be a bedtools file
     :return: pybedools object of the off-target
@@ -96,7 +98,6 @@ def load_cas_offinder_off_target(cas_offinder_output = None, cas_offinder_output
     function_name = "load_cas_offinder_off_target"
     log.debug("Entering {}".format(function_name))
 
-    log.debug(cas_offinder_output)
     if cas_offinder_output is None:
         if cas_offinder_output_file is None:
             cas_offinder_output = pd.DataFrame()
@@ -120,7 +121,8 @@ def load_cas_offinder_off_target(cas_offinder_output = None, cas_offinder_output
     return off_target_df
 
 
-def load_flashfry_off_target(flashfry_output = None, flashfry_score = None, flashfry_output_file = None, flashfry_score_output_file = None):
+def load_flashfry_off_target(flashfry_output=None, flashfry_score=None, flashfry_output_file=None,
+                             flashfry_score_output_file=None):
     """
     Take the off-target file from flashfry and convert it to be a BedTools file
 
@@ -180,7 +182,8 @@ def load_flashfry_off_target(flashfry_output = None, flashfry_score = None, flas
         tmp_ot_df["end"] = tmp_ot_df.apply(lambda s: int(s["start"]) + len(s[0].split("_")[0]), axis=1)
         tmp_ot_df["strand"] = tmp_ot_df["tmp"].apply(lambda s: s.split("^")[1].strip(">"))
         tmp_ot_df["strand"] = tmp_ot_df["strand"].apply(lambda s: "+" if s == "F" else "se-")
-        tmp_ot_df["mismatch"] = tmp_ot_df.apply(lambda s: "mismatch={}".format(s[0].split("_")[2].split("<")[0]), axis=1)
+        tmp_ot_df["mismatch"] = tmp_ot_df.apply(lambda s: "mismatch={}".format(s[0].split("_")[2].split("<")[0]),
+                                                axis=1)
         tmp_ot_df["occurrence"] = tmp_ot_df.apply(lambda s: "occurrence={}".format(s[0].split("_")[1]), axis=1)
         tmp_ot_df.loc[:, "name"] = ""
         tmp_ot_df.loc[:, "score"] = 0
@@ -282,6 +285,7 @@ def run_cas_offinder_api(cas_offinder_input_file, server_address=""):
 
     return off_target_result
 
+
 def run_cas_offinder_locally(c_g_option, pattern, seqs, docker_path_to_genome):
     """
     Run Cas-OFFinder-bulge
@@ -299,14 +303,14 @@ def run_cas_offinder_locally(c_g_option, pattern, seqs, docker_path_to_genome):
     try:
         fd_in, path_in = write_cas_offinder_input(pattern, seqs, docker_path_to_genome)
         temp_cas_offinder_output_file = tempfile.NamedTemporaryFile(mode='w', delete=False,
-                                                     dir='{}/app/configuration_files/'.format(BASE_DIR))
+                                                                    dir='{}/app/configuration_files/'.format(BASE_DIR))
 
         log.debug("cas_offinder_input_file_path: {}".format(path_in))
 
         log.debug("cas_offinder_output_file_path: {}".format(temp_cas_offinder_output_file.name))
         temp_cas_offinder_output_file.close()
 
-        args = ['python', const.CAS_OFFINDER_BULGE_PATH, path_in, c_g_option,
+        args = [const.CAS_OFFINDER_BULGE_PATH, path_in, c_g_option,
                 temp_cas_offinder_output_file.name]
 
         log.info("Starting to run cas-offinder")
@@ -321,6 +325,7 @@ def run_cas_offinder_locally(c_g_option, pattern, seqs, docker_path_to_genome):
         os.remove(temp_cas_offinder_output_file.name)
 
     return cas_offinder_output
+
 
 def write_cas_offinder_input(pattern, seqs, docker_path_to_genome, input_file=None):
     """
@@ -346,6 +351,7 @@ def write_cas_offinder_input(pattern, seqs, docker_path_to_genome, input_file=No
             tmp_in.write(line)
     return fd_in, input_file
 
+
 def run_flashfry(database_path, command=None, **kwargs):
     """
     Run FlashFry with the commands received
@@ -369,16 +375,13 @@ def run_flashfry(database_path, command=None, **kwargs):
     if command == 'index':
         _run_flashfry_index(flashfry_header_path)
 
-    elif command == "discover" :
-        return _run_flashfry_discover(flashfry_header_path, kwargs.get('sites',[]))
+    elif command == "discover":
+        return _run_flashfry_discover(flashfry_header_path, kwargs.get('sites', []))
 
     elif command == "score":
         return _run_flashfry_score(flashfry_header_path, **kwargs)
 
-
     time_end = perf_counter()
-
-
 
     log.info("Finish running FlashFry in {}".format(timedelta(seconds=(time_end - time_start))))
 
@@ -425,21 +428,23 @@ def _run_flashfry_index(flashfry_header_path):
     log.info("Starting to run FlashFry index building")
     run_external_proc(build_index_args)
     log.info("Finish running FlashFry index building")
-def _run_flashfry_discover(flashfry_header_path, sites):
 
+
+def _run_flashfry_discover(flashfry_header_path, sites):
     flashfry_output = None
 
     log.info("FlashFry header location: {}".format(flashfry_header_path))
 
     try:
         temp_flashfry_input_file = tempfile.NamedTemporaryFile(mode='w', delete=False,
-                                                     dir='{}/app/configuration_files/'.format(BASE_DIR))
+                                                               dir='{}/app/configuration_files/'.format(BASE_DIR))
         log.info("flashfry_input_file_path: {}".format(temp_flashfry_input_file.name))
         temp_flashfry_output_file = tempfile.NamedTemporaryFile(mode='w', delete=False,
-                                                     dir='{}/app/configuration_files/'.format(BASE_DIR))
+                                                                dir='{}/app/configuration_files/'.format(BASE_DIR))
         log.info("flashfry_output_file_path: {}".format(temp_flashfry_output_file.name))
 
-        temp_flashfry_input_file.writelines([">sequence_{}\n{}".format(i, site["sequence"]) for i, site in enumerate(sites)])
+        temp_flashfry_input_file.writelines(
+            [">sequence_{}\n{}".format(i, site["sequence"]) for i, site in enumerate(sites)])
 
         temp_flashfry_input_file.close()
         temp_flashfry_output_file.close()
@@ -462,8 +467,8 @@ def _run_flashfry_discover(flashfry_header_path, sites):
 
     return flashfry_output
 
-def _run_flashfry_score(flashfry_header_path, flashfry_output_file = None, flashfry_output_df = None):
 
+def _run_flashfry_score(flashfry_header_path, flashfry_output_file=None, flashfry_output_df=None):
     flashfry_score = None
     temp_flashfry_output_file = None
 
@@ -483,7 +488,8 @@ def _run_flashfry_score(flashfry_header_path, flashfry_output_file = None, flash
             temp_flashfry_output_file.close()
 
         temp_flashfry_score_output_path = tempfile.NamedTemporaryFile(mode='w', delete=False,
-                                                         dir='{}/app/configuration_files/'.format(BASE_DIR))
+                                                                      dir='{}/app/configuration_files/'.format(
+                                                                          BASE_DIR))
 
         log.info("temp_flashfry_score_output_path: {}".format(temp_flashfry_score_output_path.name))
 
@@ -497,7 +503,6 @@ def _run_flashfry_score(flashfry_header_path, flashfry_output_file = None, flash
         run_external_proc(score_args)
         log.info("Finish running FlashFry score")
 
-
         flashfry_score = pd.read_csv(temp_flashfry_score_output_path.name, sep="\t")
 
     finally:
@@ -505,8 +510,8 @@ def _run_flashfry_score(flashfry_header_path, flashfry_output_file = None, flash
         if temp_flashfry_output_file is not None:
             os.remove(temp_flashfry_output_file.name)
 
-
     return flashfry_score
+
 
 def _run_crispritz_search(genome_folder_path, sites, pattern, n_dna_bulge, n_rna_bulge, pam, downstream, number_of_threads = 1):
 
