@@ -139,7 +139,9 @@ class SitesList(BaseModel):
     """
 
     request_id: int
-    pattern: str = "NNNNNNNNNNNNNNNNNNNNNGG"
+    # pattern: str = "NNNNNNNNNNNNNNNNNNNNNGG"
+    pam: str = "NGG"
+    downstream: bool = True
     pattern_dna_bulge: int = 0
     pattern_rna_bulge: int = 0
     sites: List[Site]
@@ -154,8 +156,8 @@ class SitesList(BaseModel):
             raise ValueError("Not a valid DB")
         return v
 
-    @validator("pattern")
-    def val_pattern(cls, v):
+    @validator("pam")
+    def val_pam(cls, v):
         if not re.fullmatch(r"[AGTCRYSWKMBDHVN]*$", v):
             raise ValueError("Not a valid pattern. Please refer for Cas-Offinder documentation")
         return v
@@ -170,7 +172,7 @@ class SitesList(BaseModel):
 
     @validator("search_tools")
     def val_search_tool(cls, v):
-        tools = ["flashfry", "cas_offinder"]
+        tools = ["flashfry", "cas_offinder", "crispritz"]
         test = all(item in tools for item in v)
         if not test:
             raise ValueError("Not a valid tools. Only {} are supported".format(tools))

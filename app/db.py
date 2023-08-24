@@ -65,6 +65,11 @@ class Db(object):
         intersection_bed = self.db_bed.intersect(off_target_bed, wb=True, wa=True, sorted=True)
         # Convert intersection result to dataframe
         if intersection_bed.count() != 0:
+            log.info("########################################################################")
+            log.info(intersection_bed.to_dataframe().columns)
+            log.info(len(intersection_bed.to_dataframe().columns))
+            log.info("########################################################################")
+
             intersection_group = intersection_bed.to_dataframe(header=None, names=self.columns_name,
                                                                dtype=self.dtype_to_intersect)
             if self.separate_attributes:
@@ -120,7 +125,7 @@ class GencodeDb(Db):
         self.url = "ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_36/gencode.v36.annotation.gff3.gz"
         self.separate_attributes = True
         self.columns_name = ["chromosome", "source", "segment", "start", "end", "score", "strand", "frame",
-                             "attributes", "ot_chromosome", "ot_start", "ot_end", "off_target_id", "risk_score",
+                             "attributes", "ot_chromosome", "ot_start", "ot_end", "off_target_id",
                              "ot_strand", "ot_attributes", "ot_id", "ot_seq"]
         self.dtype_to_intersect = {"chromosome": str, "ot_chromosome": str}
         self.final_columns = final_columns
@@ -199,7 +204,7 @@ class MirGeneDB(Db):
         self.url = "https://mirgenedb.org/static/data/hsa/hsa-all.bed"
 
         self.columns_name = ["chromosome", "start", "end", "mir_symbol", "score", "strand", "ot_chromosome",
-                             "ot_start", "ot_end", "off_target_id", "risk_score", "ot_strand",
+                             "ot_start", "ot_end", "off_target_id", "ot_strand",
                              "ot_attributes", "ot_id", "ot_seq"]
         self.dtype_to_intersect = {"chromosome": str, "ot_chromosome": str}
         self.final_columns = final_columns
@@ -270,7 +275,7 @@ class ReMapEPD(Db):
         super().__init__("ReMapEPD", file_path)
         self.separate_attributes = True
         self.columns_name = ["chromosome", "start", "end", "attributes", "score", "strand", "ot_chromosome",
-                             "ot_start", "ot_end", "off_target_id", "risk_score", "ot_strand", "ot_attributes",
+                             "ot_start", "ot_end", "off_target_id", "ot_strand", "ot_attributes",
                              "ot_id", "ot_seq"]
         self.dtype_to_intersect = {"chromosome": str, "ot_chromosome": str}
         self.final_columns = final_columns
@@ -311,7 +316,7 @@ class EnhancerAtlas(Db):
         file_path = "{}/{}".format(database_base_path, file_path)
         super().__init__("EnhancerAtlas", file_path)
         self.columns_name = ["chr_enhancer", "enh_start", "enh_stop", "name", "ot_chromosome",
-                             "ot_start", "ot_end", "off_target_id", "risk_score", "ot_strand",
+                             "ot_start", "ot_end", "off_target_id", "ot_strand",
                              "ot_attributes", "ot_id", "ot_seq"]
         self.dtype_to_intersect = {"chr_enhancer": str, "ot_chromosome": str}
         self.final_columns = final_columns
@@ -364,7 +369,7 @@ class Pfam(Db):
         super().__init__("Pfam", file_path)
         self.separate_attributes = True
         self.columns_name = ["chromosome", "start", "end", "attributes", "ot_chromosome",
-                             "ot_start", "ot_end", "off_target_id", "risk_score", "ot_strand",
+                             "ot_start", "ot_end", "off_target_id", "ot_strand",
                              "ot_attributes", "ot_id", "ot_seq"]
         self.dtype_to_intersect = {"chromosome": str, "ot_chromosome": str}
         self.final_columns = final_columns
@@ -398,7 +403,7 @@ class TargetScan(Db):
         file_path = "{}/{}".format(database_base_path, file_path)
         super().__init__("TargetScan", file_path)
         self.columns_name = ["chromosome", "start", "end", "name", "score", "strand", "ot_chromosome",
-                             "ot_start", "ot_end", "off_target_id", "risk_score", "ot_strand",
+                             "ot_start", "ot_end", "off_target_id", "ot_strand",
                              "ot_attributes", "ot_id", "ot_seq"]
         self.dtype_to_intersect = {"chromosome": str, "ot_chromosome": str}
         self.final_columns = final_columns

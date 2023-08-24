@@ -14,11 +14,12 @@ from flask import Flask, request, make_response, jsonify
 # from fastapi.responses import JSONResponse
 from pydantic_webargs import webargs
 import warnings
+import itertools
 
 from configuration_files.const import FLASHFRY_INPUT_PATH, CAS_OFFINDER_OUTPUT_PATH, CAS_OFFINDER_INPUT_FILE_PATH, \
     FLASHFRY_OUTPUT_PATH, FLASHFRY_SCORE_OUTPUT_PATH, YAML_CONFIG_FILE
-from off_target import run_flashfry, run_cas_offinder_locally, load_off_target_from_file, \
-    load_off_target_from_cas_offinder_and_flashfry, write_cas_offinder_input
+from off_target import run_flashfry, run_crispritz, run_cas_offinder_locally, load_off_target_from_file, \
+    load_off_target_from_databases, write_cas_offinder_input
 from db import update_database_base_path, get_database_path
 from helper import get_logger
 from off_risk import extract_data
@@ -119,14 +120,30 @@ def analyze_ot(**kwargs):
     tools_list = body["search_tools"]
 
     cas_offinder_output = None
+    crispritz_output = None
     flashfry_output = None
     flashfry_score = None
+
+    if not all(len(site["sequence"]) == len(body["sites"][0]["sequence"]) for site in body["sites"]):
+        log.info("not all sequences should be of the same length")
+        raise Exception(
+            "sequences should be of the same length")
+
+    target_pattern = ""
+    if body["downstream"]:
+        target_pattern = "{}{}".format("N" * len(body["sites"][0]["sequence"]), body["pam"])
+    else:
+        target_pattern = "{}{}".format(body["pam"], "N" * len(body["sites"][0]["sequence"]))
+
 
     if "cas_offinder" in tools_list:
 
         # Create the input file for cas-offinder
+
+
+
         seqs = ",".join(["{} {}".format(s["sequence"], s["mismatch"]) for s in body["sites"]])
-        pattern = "{} {} {}".format(body["pattern"], body["pattern_dna_bulge"], body["pattern_rna_bulge"])
+        pattern = "{} {} {}".format(target_pattern, body["pattern_dna_bulge"], body["pattern_rna_bulge"])
         genome_type = conf_yaml["cas_offinder"]["default_genome"]
 
         if genome_type not in conf_yaml["genomes"]:
@@ -134,17 +151,17 @@ def analyze_ot(**kwargs):
             raise Exception(
                 "No such genome {}. Allowed genome: {}".format(genome_type, list(conf_yaml["genomes"].keys())))
 
-        docker_path_to_genome = conf_yaml["genomes"][genome_type]
+        docker_path_to_genome = conf_yaml["genomes"][genome_type]["full"]
 
 
         # Run Cas-Offinder
         try:
             cas_offinder_output = run_cas_offinder_locally("C", pattern, seqs, docker_path_to_genome)
             log.info("Finish running cas-offinder")
+            # return cas_offinder_output.to_json(orient='records')
         except Exception as e:
             log.error("An error has occurred while running cas-offinder {}".format(e))
 
-    off_target_df = None
     if "flashfry" in tools_list:
         try:
             flashfry_output, flashfry_score = run_flashfry_from_server(body)
@@ -153,8 +170,23 @@ def analyze_ot(**kwargs):
         except Exception as e:
             log.error("An error has occurred while running flashfry {}".format(e))
 
+
+    if "crispritz" in tools_list:
+        try:
+            genome_type = conf_yaml["cas_offinder"]["default_genome"]
+            crispritz_output = run_crispritz_from_server(pattern=target_pattern, sites=body["sites"], pam=body["pam"],
+                                                         pattern_dna_bulge=body["pattern_dna_bulge"], pattern_rna_bulge=body["pattern_rna_bulge"],
+                                                         genome_type=genome_type, downstream=body["downstream"])
+            # Remove input file
+            log.info("Finish running CRISPRitz")
+            # return crispritz_output.to_json(orient='records')
+        except Exception as e:
+            log.error("An error has occurred while running CRISPRitz {}".format(e))
+
+
     # analyze
-    off_target_df = load_off_target_from_cas_offinder_and_flashfry(cas_offinder_output=cas_offinder_output,
+    off_target_df = load_off_target_from_databases(cas_offinder_output=cas_offinder_output,
+                                                                   crispritz_output=crispritz_output,
                                                                    flashfry_output=flashfry_output,
                                                                    flashfry_score=flashfry_score)
 
@@ -248,6 +280,21 @@ def run_flashfry_from_server(body):
 
     return flashfry_output, flashfry_score
 
+def run_crispritz_from_server(pattern, sites, pam, pattern_dna_bulge, pattern_rna_bulge, genome_type, downstream):
+    """
+    Run FlashFry
+    Args:
+        body: FlashFrySite object
+    """
+
+
+    docker_path_to_genome = conf_yaml["genomes"][genome_type]["chromosomes_folder"]
+    crispritz_output = run_crispritz(genome_folder_path=docker_path_to_genome, command="search",sites=sites,
+                                     pattern=pattern, pam=pam, number_of_threads=1000,
+                                     pattern_rna_bulge=pattern_rna_bulge, pattern_dna_bulge=pattern_dna_bulge,
+                                     downstream=downstream)
+
+    return crispritz_output
 
 @app.route("/v1/cas-offinder-bulge/", methods=["GET"])
 def cas_offinder_bulge():
@@ -292,7 +339,7 @@ def run_cas_offinder_server(received_request, cas_offinder_type="default"):
         raise Exception(
             "No such genome {}. Allowed genome: {}".format(genome_type, list(conf_yaml["genomes"].keys())))
 
-    docker_path_to_genome = conf_yaml["genomes"][genome_type]
+    docker_path_to_genome = conf_yaml["genomes"][genome_type]["full"]
 
     try:
 

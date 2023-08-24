@@ -103,7 +103,7 @@ def extract_data(db_name_list, off_target_df = None):
                                      "complete_result", "gene_ensembl_id")
             # Analyze  - intersect between off-target location to the the DB location with BEDTools.
             else:
-                current_db.analyze(off_target_bed)
+                current_db.analyze(off_target_bed) ################# Intersect than seperate files #######################
 
             # Analyze  - intersect between Enhancer Atlas result to the the DB columns for intersection.
             if (current_db_name in enhancer_atlas_dependent) and (enhancer_atlas_db is not None) and \
@@ -129,7 +129,7 @@ def extract_data(db_name_list, off_target_df = None):
 
     log.info("Saving the results")
     time_start = perf_counter()
-    off_target_df = calculate_score(off_target_df)
+    off_target_df = calculate_score(off_target_df) ################# Initialized risk_score #######################
     ot_results = save_global_off_target_results(off_target_df, flashfry_score, conf_yaml["off_target_result_columns"])
     db_results = save_db_result(db_list)
     time_end = perf_counter()

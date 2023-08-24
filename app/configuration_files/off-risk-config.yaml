@@ -1,7 +1,9 @@
 # Comment
 yaml-version: 1.0
 genomes:
-  human: /databases/genome/hg38.fa
+  human:
+    full: /databases/genome/hg38.fa
+    chromosomes_folder: /databases/genome/chroms
 databases:
   base_path: /databases
   gencode:

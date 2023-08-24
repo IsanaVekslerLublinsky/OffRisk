@@ -1,23 +1,25 @@
 version: "3.9"  # optional since v1.27.0
 services:
   off-risk-server:
-    build:
-      context: ./OffRisk/
-      dockerfile: Dockerfile
     ports:
       - "8123:80"
     volumes:
-      - ./databases:/databases
-    image: off-risk-server
+      - C:\Users\Owner\OneDrive - post.bgu.ac.il\Crispr\mnt\gogenome\off-tov\databases\:/databases
+#    image: almaliahbgu/off_risk:off-risk-server
+#    image: off-risk-server
+    build:
+      context: ../
 
   off-risk-ui:
-    build:
-      context: ./OffRisk-ui/
-      dockerfile: Dockerfile
     ports:
      - "8501:8501"
-    image: off-risk-ui
+    build:
+      context: ../../OffRisk-ui/
+#    image: almaliahbgu/off_risk:off-risk-ui
+#    image: off-risk-ui
 networks:
- default:
-   external:
-    name: off-risk-net
+  off-risk-net:
+    external: true
+# default:
+#  external:
+#    name: off-risk-net

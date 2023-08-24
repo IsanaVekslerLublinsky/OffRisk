@@ -7,6 +7,8 @@ import pandas as pd
 import requests
 import tempfile
 import os
+import re
+import itertools
 import configuration_files.const as const
 from configuration_files.const import FLASHFRY_TMP_LOCATION_PATH, FLASHFRY_DATABASE_BASE_PATH, \
     COMPLETE_GENOME_PATH, FLASHFRY_INPUT_PATH, FLASHFRY_OUTPUT_PATH, FLASHFRY_SCORE_OUTPUT_PATH, \
@@ -16,9 +18,10 @@ from obj_def import OffTarget
 log = logging.getLogger("Base_log")
 
 
-def load_off_target_from_cas_offinder_and_flashfry(flashfry_output = None, flashfry_score = None,
-                                                   flashfry_output_file = None, flashfry_score_output_file = None,
-                                                   cas_offinder_output = None, cas_offinder_output_file = None):
+def load_off_target_from_databases(flashfry_output = None, flashfry_score = None,
+                                   crispritz_output = None, crispritz_output_file = None,
+                                   flashfry_output_file = None, flashfry_score_output_file = None,
+                                   cas_offinder_output = None, cas_offinder_output_file = None):
 
     log.info("Loading local off-target")
     off_target_df = None
@@ -26,11 +29,13 @@ def load_off_target_from_cas_offinder_and_flashfry(flashfry_output = None, flash
 
     off_target_co_df = load_cas_offinder_off_target(cas_offinder_output, cas_offinder_output_file)
 
+    off_target_ci_df = load_crispritz_off_target(crispritz_output, crispritz_output_file)
+
     off_target_ff_df, flashfry_score = load_flashfry_off_target(flashfry_output, flashfry_score, flashfry_output_file, flashfry_score_output_file)
 
     # If both files was loaded, merge them
-    if (off_target_co_df is not None) & (off_target_ff_df is not None):
-        off_target_df = pd.concat([off_target_co_df, off_target_ff_df])
+    if (off_target_co_df is not None) or (off_target_ff_df is not None) or (off_target_ci_df is not None):
+        off_target_df = pd.concat([off_target_co_df, off_target_ff_df, off_target_ci_df])
         off_target_df = off_target_df.astype({OffTarget.get_field_title("chromosome"): "category",
                                               OffTarget.get_field_title("start"): int,
                                               OffTarget.get_field_title("end"): int,
@@ -40,11 +45,7 @@ def load_off_target_from_cas_offinder_and_flashfry(flashfry_output = None, flash
                                               OffTarget.get_field_title("end"),
                                               OffTarget.get_field_title("strand")], inplace=True)
 
-    elif off_target_co_df is not None:
-        off_target_df = off_target_co_df
-    elif off_target_ff_df is not None:
-        off_target_df = off_target_ff_df
-    if off_target_df is not None:
+
         off_target_df[OffTarget.get_field_title("chromosome")] = \
             off_target_df[OffTarget.get_field_title("chromosome")].apply(lambda s: s.strip("chr"))
         if OffTarget.get_field_title("id") not in off_target_df.columns:
@@ -52,6 +53,38 @@ def load_off_target_from_cas_offinder_and_flashfry(flashfry_output = None, flash
         if OffTarget.get_field_title("sequence") not in off_target_df.columns:
             off_target_df[OffTarget.get_field_title("sequence")] = "."
 
+    return off_target_df
+
+def load_crispritz_off_target(crispritz_output = None, crispritz_output_file = None):
+    """
+    Take the off-target file from cas-offinder and convert it to be a bedtools file
+    :return: pybedools object of the off-target
+    """
+
+    function_name = "load_cas_offinder_off_target"
+    log.debug("Entering {}".format(function_name))
+
+    log.debug(crispritz_output)
+    if crispritz_output is None:
+        if crispritz_output_file is None:
+            crispritz_output = pd.DataFrame()
+        else:
+            crispritz_output = pd.read_csv(crispritz_output_file, sep="\t")
+
+    if crispritz_output.empty:
+        return None
+
+    # todo: we will need to verify the off-target file format
+    # Read the off-target file to a dataframe
+    off_target_df = crispritz_output
+
+    off_target_df = off_target_df[["Chromosome", "Position", "DNA", "Direction"]]
+    off_target_df.loc[:, "end"] = off_target_df.apply(lambda row: (row.loc["Position"] + len(row.loc["DNA"])), axis=1)
+    off_target_df.loc[:, "name"] = off_target_df.index
+    off_target_df.loc[:, "score"] = 0
+    off_target_df = off_target_df.rename(
+        columns={"Chromosome": "chromosome", "Position": "start", "Direction": "strand"})
+    off_target_df = off_target_df[["chromosome", "start", "end", "name", "score", "strand"]]
     return off_target_df
 
 def load_cas_offinder_off_target(cas_offinder_output = None, cas_offinder_output_file = None):
@@ -273,7 +306,7 @@ def run_cas_offinder_locally(c_g_option, pattern, seqs, docker_path_to_genome):
         log.debug("cas_offinder_output_file_path: {}".format(temp_cas_offinder_output_file.name))
         temp_cas_offinder_output_file.close()
 
-        args = [const.CAS_OFFINDER_BULGE_PATH, path_in, c_g_option,
+        args = ['python', const.CAS_OFFINDER_BULGE_PATH, path_in, c_g_option,
                 temp_cas_offinder_output_file.name]
 
         log.info("Starting to run cas-offinder")
@@ -349,6 +382,38 @@ def run_flashfry(database_path, command=None, **kwargs):
 
     log.info("Finish running FlashFry in {}".format(timedelta(seconds=(time_end - time_start))))
 
+def run_crispritz(genome_folder_path, command, sites, pattern, pam, downstream=True, number_of_threads=1,
+                  pattern_rna_bulge=0, pattern_dna_bulge=0):
+    """
+    Run FlashFry with the commands received
+    Args:
+        database_path: the base path of the database
+        commands: commands to run. can be build_index, discover or score
+    """
+
+    if command is None:
+        raise Exception('A Command should be one of the following: [search, index]')
+
+    # if os.path.exists(genome_folder_path):
+    #     log.info("Database already exist, it will not be build again.")
+    # else:
+    #     _run_flashfry_index(flashfry_header_path)
+
+    time_start = perf_counter()
+
+    if command == 'index':
+        _run_flashfry_index(genome_folder_path)
+
+    elif command == "search" :
+        return _run_crispritz_search(genome_folder_path, sites, pattern, pattern_dna_bulge, pattern_rna_bulge, pam,
+                                     downstream, number_of_threads)
+
+
+    time_end = perf_counter()
+
+
+
+    log.info("Finish running FlashFry in {}".format(timedelta(seconds=(time_end - time_start))))
 
 def _run_flashfry_index(flashfry_header_path):
     build_index_args = ["java", "-Xmx4g", "-jar",
@@ -443,3 +508,84 @@ def _run_flashfry_score(flashfry_header_path, flashfry_output_file = None, flash
 
     return flashfry_score
 
+def _run_crispritz_search(genome_folder_path, sites, pattern, n_dna_bulge, n_rna_bulge, pam, downstream, number_of_threads = 1):
+
+    crispritz_output = pd.DataFrame()
+
+    log.info("crispritz genome chromosomes location: {}".format(genome_folder_path))
+
+    is_reversed = not downstream
+    pam_substitutes = { "R": ["A", "G"], "Y": ["C", "T"], "S": ["G", "C"],
+                        "W": ["A", "T"], "K": ["G", "T"], "M": ["A", "C"],
+                        "B": ["C", "G", "T"], "D": ["A", "G", "T"], "H": ["A", "C", "T"], "V": ["A", "C", "G"],
+                        "N": ["A", "C", "G", "T"]
+                       } ##mimic cas-offinder
+    # Run CRISPRitz
+    pams = ["".join(substitute) for substitute in itertools.product(*[pam_substitutes.get(base, [base]) for base in pam])] #mimic cas-offinder
+    pattern = "[{}]".format("".join(pam_substitutes.keys()))
+    pam = re.sub(pattern, "N", pam)
+
+    mismatch_sequence = {}
+    for item in sites:
+        mismatch = item["mismatch"]
+        sequence = item["sequence"]
+
+        if mismatch not in mismatch_sequence:
+            mismatch_sequence[mismatch] = []
+        mismatch_sequence[mismatch].append(sequence)
+
+    for mismatch, sequences in mismatch_sequence.items():
+        try:
+            temp_pams_input_file = tempfile.NamedTemporaryFile(mode='w', delete=False,
+                                                         dir='{}/app/configuration_files/'.format(BASE_DIR))
+            log.info("temp_pams_input_file: {}".format(temp_pams_input_file.name))
+            temp_sequences_input_file = tempfile.NamedTemporaryFile(mode='w', delete=False,
+                                                               dir='{}/app/configuration_files/'.format(BASE_DIR))
+            log.info("temp_sequences_input_file: {}".format(temp_sequences_input_file.name))
+            temp_crispritz_output_file = tempfile.NamedTemporaryFile(mode='w', delete=False,
+                                                         dir='{}/app/configuration_files/'.format(BASE_DIR))
+            log.info("temp_crispritz_output_file: {}".format(temp_crispritz_output_file.name))
+
+            log.info("pam: {}".format(pam))
+
+            temp_pams_input_file.writelines(["{}{} {}".format("N" * (len(sequences[0])), pam, -len(pam) if is_reversed else len(pam))])
+
+            temp_sequences_input_file.writelines(["{}{}\n".format(sequence, "N" * len(pam)) for sequence in sequences])
+
+            temp_pams_input_file.close()
+            temp_sequences_input_file.close()
+            temp_crispritz_output_file.close()
+
+            search_args = ["crispritz.py", "search", genome_folder_path,
+                           temp_pams_input_file.name, temp_sequences_input_file.name, temp_crispritz_output_file.name,
+                           "-mm", str(mismatch),
+                           # "-bDNA", str(n_dna_bulge),
+                           # "-bRNA", str(n_rna_bulge),
+                           "-th", str(number_of_threads),
+                           # "-socre", genome_folder_path,
+                           "-r"
+                           ]
+
+            log.info("Starting to run FlashFry discover")
+            run_external_proc(search_args)
+            log.info("Finish running FlashFry discover")
+
+            tmp_crispritz_output = pd.read_csv("{}.targets.txt".format(temp_crispritz_output_file.name), sep="\t")
+            crispritz_output = pd.concat([crispritz_output, tmp_crispritz_output], axis="index", ignore_index=True)
+
+        finally:
+            os.remove(temp_pams_input_file.name)
+            os.remove(temp_sequences_input_file.name)
+            os.remove(temp_crispritz_output_file.name)
+            os.remove("{}.targets.txt".format(temp_crispritz_output_file.name))
+
+        log.info(crispritz_output['DNA'])
+        log.info(pams)
+        if is_reversed:
+            log.info(crispritz_output['DNA'].str[:len(pam)])
+            crispritz_output = crispritz_output.loc[crispritz_output['DNA'].str[:len(pam)].isin(pams)]
+        else:
+            log.info(crispritz_output['DNA'].str[-len(pam):])
+            crispritz_output = crispritz_output.loc[crispritz_output['DNA'].str[-len(pam):].isin(pams)]
+
+    return crispritz_output
