@@ -309,8 +309,7 @@ def run_cas_offinder_locally(c_g_option, pattern, seqs, docker_path_to_genome):
 
         log.debug("cas_offinder_output_file_path: {}".format(temp_cas_offinder_output_file.name))
         temp_cas_offinder_output_file.close()
-
-        args = [const.CAS_OFFINDER_BULGE_PATH, path_in, c_g_option,
+        args = ["python", const.CAS_OFFINDER_BULGE_PATH, path_in, c_g_option,
                 temp_cas_offinder_output_file.name]
 
         log.info("Starting to run cas-offinder")
@@ -536,11 +535,28 @@ def _run_crispritz_search(genome_folder_path, sites, pattern, n_dna_bulge, n_rna
         sequence = item["sequence"]
 
         if mismatch not in mismatch_sequence:
-            mismatch_sequence[mismatch] = []
-        mismatch_sequence[mismatch].append(sequence)
+            mismatch_sequence[mismatch] = set()
 
-    for mismatch, sequences in mismatch_sequence.items():
+        mismatch_sequence[mismatch].add(sequence + 'N' * n_dna_bulge) if is_reversed \
+            else mismatch_sequence[mismatch].add('N' * n_dna_bulge + sequence)
+
+        for bulge_size in range(1, n_dna_bulge+1):
+            for i in range(1, len(sequence)):
+                target_sequence = sequence[:i] + 'N' * bulge_size + sequence[i:] + 'N' * (n_dna_bulge - bulge_size) if is_reversed \
+                    else 'N' * (n_dna_bulge - bulge_size) + sequence[:i] + 'N' * bulge_size + sequence[i:]
+                mismatch_sequence[mismatch].add(target_sequence)
+
+        for bulge_size in range(1, n_rna_bulge + 1):
+            for i in range(1, len(sequence) - bulge_size):
+                target_sequence = sequence[:i] + sequence[i + bulge_size:] + 'N' * (n_dna_bulge + bulge_size) if is_reversed \
+                    else 'N' * (n_dna_bulge + bulge_size) + sequence[:i] + sequence[i + bulge_size:]
+                mismatch_sequence[mismatch].add(target_sequence)
+
+
+    for mismatch, set_sequences in mismatch_sequence.items():
         try:
+            sequences = list(set_sequences)
+            log.debug(sequences)
             temp_pams_input_file = tempfile.NamedTemporaryFile(mode='w', delete=False,
                                                          dir='{}/app/configuration_files/'.format(BASE_DIR))
             log.info("temp_pams_input_file: {}".format(temp_pams_input_file.name))
@@ -551,11 +567,15 @@ def _run_crispritz_search(genome_folder_path, sites, pattern, n_dna_bulge, n_rna
                                                          dir='{}/app/configuration_files/'.format(BASE_DIR))
             log.info("temp_crispritz_output_file: {}".format(temp_crispritz_output_file.name))
 
-            log.info("pam: {}".format(pam))
+            log.debug("pam: {}".format(pam))
 
-            temp_pams_input_file.writelines(["{}{} {}".format("N" * (len(sequences[0])), pam, -len(pam) if is_reversed else len(pam))])
+            temp_pams_input_file.writelines(["{}{} {}".format(pam if is_reversed else "N" * len(sequences[0]),
+                                                              "N" * len(sequences[0]) if is_reversed else pam,
+                                                              -len(pam) if is_reversed else len(pam))])
 
-            temp_sequences_input_file.writelines(["{}{}\n".format(sequence, "N" * len(pam)) for sequence in sequences])
+            temp_sequences_input_file.writelines(["{}{}\n".format("N" * len(pam) if is_reversed else sequence,
+                                                                  sequence if is_reversed else "N" * len(pam)) for sequence in sequences])
+
 
             temp_pams_input_file.close()
             temp_sequences_input_file.close()
@@ -571,12 +591,14 @@ def _run_crispritz_search(genome_folder_path, sites, pattern, n_dna_bulge, n_rna
                            "-r"
                            ]
 
-            log.info("Starting to run FlashFry discover")
+            log.info("Starting to run CRISPRitz discover")
             run_external_proc(search_args)
-            log.info("Finish running FlashFry discover")
+            log.info("Finish running CRISPRitz discover")
 
             tmp_crispritz_output = pd.read_csv("{}.targets.txt".format(temp_crispritz_output_file.name), sep="\t")
             crispritz_output = pd.concat([crispritz_output, tmp_crispritz_output], axis="index", ignore_index=True)
+            log.debug(pams)
+            log.debug(crispritz_output)
 
         finally:
             os.remove(temp_pams_input_file.name)
@@ -584,13 +606,10 @@ def _run_crispritz_search(genome_folder_path, sites, pattern, n_dna_bulge, n_rna
             os.remove(temp_crispritz_output_file.name)
             os.remove("{}.targets.txt".format(temp_crispritz_output_file.name))
 
-        log.info(crispritz_output['DNA'])
-        log.info(pams)
+
         if is_reversed:
-            log.info(crispritz_output['DNA'].str[:len(pam)])
             crispritz_output = crispritz_output.loc[crispritz_output['DNA'].str[:len(pam)].isin(pams)]
         else:
-            log.info(crispritz_output['DNA'].str[-len(pam):])
             crispritz_output = crispritz_output.loc[crispritz_output['DNA'].str[-len(pam):].isin(pams)]
 
     return crispritz_output

@@ -65,15 +65,11 @@ class Db(object):
         intersection_bed = self.db_bed.intersect(off_target_bed, wb=True, wa=True, sorted=True)
         # Convert intersection result to dataframe
         if intersection_bed.count() != 0:
-            log.info("########################################################################")
-            log.info(intersection_bed.to_dataframe().columns)
-            log.info(len(intersection_bed.to_dataframe().columns))
-            log.info("########################################################################")
-
             intersection_group = intersection_bed.to_dataframe(header=None, names=self.columns_name,
                                                                dtype=self.dtype_to_intersect)
             if self.separate_attributes:
                 intersection_group = separate_attributes(intersection_group)
+            log.debug(intersection_group)
             self.complete_result = intersection_group
             self.pr_df.append({"name": self.db_name, "description": "Complete result",
                                "data": intersection_group.to_json(orient="columns")})

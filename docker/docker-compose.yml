@@ -4,14 +4,22 @@ services:
     ports:
       - "8123:80"
     volumes:
-      - <path_to_database_folder>/databases:/databases
-    image: almaliahbgu/off_risk:off-risk-server
+      - C:\Users\Owner\OneDrive - post.bgu.ac.il\Crispr\mnt\gogenome\off-tov\databases\:/databases
+#    image: almaliahbgu/off_risk:off-risk-server
+#    image: off-risk-server
+    build:
+      context: ../
 
   off-risk-ui:
     ports:
      - "8501:8501"
-    image: almaliahbgu/off_risk:off-risk-ui
+    build:
+      context: ../../OffRisk-ui/
+#    image: almaliahbgu/off_risk:off-risk-ui
+#    image: off-risk-ui
 networks:
- default:
-   external:
-    name: OffRisk-net
+  off-risk-net:
+    external: true
+# default:
+#  external:
+#    name: off-risk-net

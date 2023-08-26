@@ -40,16 +40,16 @@ RUN wget https://github.com/intel/compute-runtime/releases/download/21.13.19438/
     apt-add-repository 'deb [arch=amd64] https://repositories.intel.com/graphics/ubuntu focal main'
 
 WORKDIR /tmp
-RUN wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB && \
-    apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB && \
-    rm GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB && \
-    echo "deb https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list && \
-    wget -qO - https://repositories.intel.com/graphics/intel-graphics.key | apt-key add - && \
-    apt-add-repository 'deb [arch=amd64] https://repositories.intel.com/graphics/ubuntu focal main' && \
-    apt-get update -y && \
-    apt-get install -y --no-install-recommends \
-    intel-oneapi-runtime-mkl \
-    intel-oneapi-runtime-opencl
+#RUN wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB && \
+#    apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB && \
+#    rm GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB && \
+#    echo "deb https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list && \
+#    wget -qO - https://repositories.intel.com/graphics/intel-graphics.key | apt-key add - && \
+#    apt-add-repository 'deb [arch=amd64] https://repositories.intel.com/graphics/ubuntu focal main' && \
+#    apt-get update -y && \
+#    apt-get install -y --no-install-recommends \
+#    intel-oneapi-runtime-mkl \
+#    intel-oneapi-runtime-opencl
 #    intel-oneapi-runtime-ccl \
 #    intel-oneapi-runtime-compilers \
 #    intel-oneapi-runtime-dal \
@@ -112,8 +112,8 @@ RUN /bin/bash -c ". activate $CONDA_ENV_NAME && \
     conda config --add channels conda-forge && \
     conda config --add channels cyclus && \
     conda config --add channels intel && \
-    conda install -y pip uwsgi crispritz java-jre"
-#    conda install -y pip uwsgi crispritz java-jre intel-opencl-rt mkl cas-offinder"
+    conda install -y pip uwsgi crispritz java-jre intel-opencl-rt mkl cas-offinder"
+    #    conda install -y pip uwsgi crispritz java-jre"
 
 
 ENV PATH="/app/tools:${PATH}"

@@ -128,7 +128,9 @@ def analyze_ot(**kwargs):
     if "cas_offinder" in tools_list:
 
         # Create the input file for cas-offinder
-        seqs = ",".join(["{} {}".format(s["sequence"], s["mismatch"]) for s in body["sites"]])
+        seqs = ",".join(["{} {}".format(s["sequence"] + "N" * len(body["pam"]) if body["downstream"] else
+                                          "N" * len(body["pam"]) + s["sequence"],
+                                          s["mismatch"]) for s in body["sites"]])
         pattern = "{} {} {}".format(target_pattern, body["pattern_dna_bulge"], body["pattern_rna_bulge"])
         genome_type = conf_yaml["cas_offinder"]["default_genome"]
 
@@ -169,7 +171,7 @@ def analyze_ot(**kwargs):
 
 
     # analyze
-    off_target_df = load_off_target_from_databases(
+    off_target_df, flashfry_score = load_off_target_from_databases(
         cas_offinder_output=cas_offinder_output,
         crispritz_output=crispritz_output,
         flashfry_output=flashfry_output,
