@@ -63,15 +63,19 @@ class Db(object):
         log.info("Starting to analyze {}".format(self.db_name))
         # Run BedTools intersection
         intersection_bed = self.db_bed.intersect(off_target_bed, wb=True, wa=True, sorted=True)
+
         # Convert intersection result to dataframe
         if intersection_bed.count() != 0:
-            intersection_group = intersection_bed.to_dataframe(header=None, names=self.columns_name,
+            intersection_group = intersection_bed.to_dataframe(header=None, names=self.columns_name, index_col=False,
                                                                dtype=self.dtype_to_intersect)
+            intersection_group.to_csv('/databases/temp_{}.csv'.format(self.db_name), sep='#')
+
             if self.separate_attributes:
                 intersection_group = separate_attributes(intersection_group)
+
             self.complete_result = intersection_group
             self.pr_df.append({"name": self.db_name, "description": "Complete result",
-                               "data": intersection_group.to_json(orient="columns")})
+                               "data": intersection_group.reset_index().to_json(orient="columns")})
         else:
             # if count is 0, it means that there is not result for the intersection
             log.info("There is no result from {} intersection".format(self.db_name))
@@ -120,8 +124,8 @@ class GencodeDb(Db):
         self.url = "ftp://ftp.ebi.ac.uk/pub/databases/gencode/Gencode_human/release_36/gencode.v36.annotation.gff3.gz"
         self.separate_attributes = True
         self.columns_name = ["chromosome", "source", "segment", "start", "end", "score", "strand", "frame",
-                             "attributes", "ot_chromosome", "ot_start", "ot_end", "off_target_id", "risk_score",
-                             "ot_strand", "ot_attributes", "ot_id", "ot_seq"]
+                             "attributes", "ot_chromosome", "ot_start", "ot_end", "off_target_id", "ot_score",
+                             "ot_strand", "ot_attributes", "ot_id", "ot_dna", "ot_rna", "ot_miss"]
         self.dtype_to_intersect = {"chromosome": str, "ot_chromosome": str}
         self.final_columns = final_columns
 
@@ -165,9 +169,10 @@ class GencodeDb(Db):
             # Update relevant fields in global off_target dataframe
             intersection_group = self.complete_result.groupby("off_target_id", as_index=False).agg(
                 {"gene_ensembl_id": lambda x: list(set(x)), "gene_symbol": lambda x: list(set(x)),
-                 "segment": lambda x: list(set(x))})
+                 "segment": lambda x: list(set(x)), "gene_type": lambda x: list(set(x))})
             off_target_df = merge_off_target_information(off_target_df, intersection_group,
-                                                         ["gene_ensembl_id", "gene_symbol", "segment"])
+                                                         ["gene_ensembl_id", "gene_symbol", "segment", "gene_type"])
+
         return off_target_df
 
     def segment_filtered_result(self):
@@ -199,8 +204,8 @@ class MirGeneDB(Db):
         self.url = "https://mirgenedb.org/static/data/hsa/hsa-all.bed"
 
         self.columns_name = ["chromosome", "start", "end", "mir_symbol", "score", "strand", "ot_chromosome",
-                             "ot_start", "ot_end", "off_target_id", "risk_score", "ot_strand",
-                             "ot_attributes", "ot_id", "ot_seq"]
+                             "ot_start", "ot_end", "off_target_id", "ot_score", "ot_strand",
+                             "ot_attributes", "ot_id", "ot_dna", "ot_rna", "ot_miss"]
         self.dtype_to_intersect = {"chromosome": str, "ot_chromosome": str}
         self.final_columns = final_columns
 
@@ -270,8 +275,8 @@ class ReMapEPD(Db):
         super().__init__("ReMapEPD", file_path)
         self.separate_attributes = True
         self.columns_name = ["chromosome", "start", "end", "attributes", "score", "strand", "ot_chromosome",
-                             "ot_start", "ot_end", "off_target_id", "risk_score", "ot_strand", "ot_attributes",
-                             "ot_id", "ot_seq"]
+                             "ot_start", "ot_end", "off_target_id", "ot_score", "ot_strand", "ot_attributes",
+                             "ot_id", "ot_dna", "ot_rna", "ot_miss"]
         self.dtype_to_intersect = {"chromosome": str, "ot_chromosome": str}
         self.final_columns = final_columns
 
@@ -311,8 +316,8 @@ class EnhancerAtlas(Db):
         file_path = "{}/{}".format(database_base_path, file_path)
         super().__init__("EnhancerAtlas", file_path)
         self.columns_name = ["chr_enhancer", "enh_start", "enh_stop", "name", "ot_chromosome",
-                             "ot_start", "ot_end", "off_target_id", "risk_score", "ot_strand",
-                             "ot_attributes", "ot_id", "ot_seq"]
+                             "ot_start", "ot_end", "off_target_id", "ot_score", "ot_strand",
+                             "ot_attributes", "ot_id", "ot_dna", "ot_rna", "ot_miss"]
         self.dtype_to_intersect = {"chr_enhancer": str, "ot_chromosome": str}
         self.final_columns = final_columns
 
@@ -364,8 +369,8 @@ class Pfam(Db):
         super().__init__("Pfam", file_path)
         self.separate_attributes = True
         self.columns_name = ["chromosome", "start", "end", "attributes", "ot_chromosome",
-                             "ot_start", "ot_end", "off_target_id", "risk_score", "ot_strand",
-                             "ot_attributes", "ot_id", "ot_seq"]
+                             "ot_start", "ot_end", "off_target_id", "ot_score", "ot_strand",
+                             "ot_attributes", "ot_id", "ot_dna", "ot_rna", "ot_miss"]
         self.dtype_to_intersect = {"chromosome": str, "ot_chromosome": str}
         self.final_columns = final_columns
 
@@ -398,8 +403,8 @@ class TargetScan(Db):
         file_path = "{}/{}".format(database_base_path, file_path)
         super().__init__("TargetScan", file_path)
         self.columns_name = ["chromosome", "start", "end", "name", "score", "strand", "ot_chromosome",
-                             "ot_start", "ot_end", "off_target_id", "risk_score", "ot_strand",
-                             "ot_attributes", "ot_id", "ot_seq"]
+                             "ot_start", "ot_end", "off_target_id", "ot_score", "ot_strand",
+                             "ot_attributes", "ot_id", "ot_dna", "ot_rna", "ot_miss"]
         self.dtype_to_intersect = {"chromosome": str, "ot_chromosome": str}
         self.final_columns = final_columns
 
@@ -572,6 +577,7 @@ class ProteinAtlas(Db):
             # create dictionary with value to integer mappings
             value_to_int = {value: i for i, value in
                             enumerate(["Not representative", "None", "Not detected", "Low", "Medium", "High"])}
+            value_to_int['Ascending'] = 1
 
             df_to_vector = df_to_vector.replace(value_to_int).drop(
                 ["gene_ensembl_id", "gene_symbol", "off_target_id"], axis=1)
@@ -834,10 +840,10 @@ def save_global_off_target_results(off_target_df, flashfry_score, columns_order=
     return save_result
 
 
-def calculate_score(off_target_df):
-    off_target_df["risk_score"] = ""
-    off_target_complete_col = ["chromosome", "start", "end", "off_target_id", "score", "strand",
-                               "attributes", "id", "sequence", "gene_ensembl_id", "gene_symbol",
+def calculate_score(off_target_df, gencode_db):
+    detailed_off_target_df = pd.DataFrame()
+    off_target_complete_col = ["chromosome", "start", "end", "off_target_id", "score", "strand", "mismatch"
+                               "attributes", "id", "dna", "cr_rna", "gene_ensembl_id", "gene_symbol",
                                "segment", "mir_gene", "remap_epd_gene_ensembl_id",
                                "enhancer_atlas_gene_ensembl_id", "disease_related",
                                "inheritance_model", "enhancer_atlas_disease_related",
@@ -850,23 +856,155 @@ def calculate_score(off_target_df):
 
     off_target_df[missing_col] = ""
     for row in off_target_df.itertuples():
-        if "exon" in row.segment:
-            if (row.disease_related != "") or (row.inheritance_model != "") or (row.cancer_related != ""):
-                off_target_df.loc[row.Index, "risk_score"] = "High_coding"
-            else:
-                off_target_df.loc[row.Index, "risk_score"] = "Medium_coding"
-        elif "transcript" in row.segment:
-            off_target_df.loc[row.Index, "risk_score"] = "Low_coding"
-        # todo : There is a bug here!
-        elif row.remap_epd_gene_ensembl_id or row.enhancer_atlas_gene_ensembl_id:
-            if row.enhancer_atlas_cancer_related or row.enhancer_atlas_inheritance_model or \
-                    row.enhancer_atlas_disease_related or row.remap_epd_cancer_related or \
-                    row.remap_epd_inheritance_model or row.remap_epd_disease_related:
-                off_target_df.loc[row.Index, "risk_score"] = "Medium_regulatory"
-            else:
-                off_target_df.loc[row.Index, "risk_score"] = "Low_regulatory"
+        dict_gencode = {}
+        gene_types_segments = list(gencode_db.complete_result.loc
+                                   [
+                                       gencode_db.complete_result['off_target_id'] == row.off_target_id,
+                                       ['gene_type', 'segment']
+                                   ].itertuples(index=False, name=None))
+
+
+        for gene_type, segment in gene_types_segments:
+            if gene_type == 'protein_coding':
+                if segment == "exon":
+                    if (row.disease_related is not None and not isinstance(row.disease_related, list) and row.disease_related != "") or \
+                            (row.disease_related is not None and isinstance(row.disease_related, list) and len(row.disease_related) > 0) or \
+                            (row.inheritance_model is not None and not isinstance(row.inheritance_model, list) and row.inheritance_model != "") or \
+                            (row.inheritance_model is not None and isinstance(row.inheritance_model, list) and len(row.inheritance_model) > 0) or \
+                            (row.cancer_related is not None and not isinstance(row.cancer_related, list) and row.cancer_related != "") or \
+                            (row.cancer_related is not None and isinstance(row.cancer_related, list) and len(row.cancer_related) > 0):
+
+                        off_target_df.loc[row.Index, "risk_score"] = "High_coding"
+                        dict_gencode[row.Index] = "High_coding"
+
+                    else:
+                        off_target_df.loc[row.Index, "risk_score"] = "Medium_coding"
+                elif segment == "transcript":
+                    off_target_df.loc[row.Index, "risk_score"] = "Low_coding"
+
+            elif row.remap_epd_gene_ensembl_id or row.enhancer_atlas_gene_ensembl_id:
+                if row.enhancer_atlas_cancer_related or row.enhancer_atlas_inheritance_model or \
+                        row.enhancer_atlas_disease_related or row.remap_epd_cancer_related or \
+                        row.remap_epd_inheritance_model or row.remap_epd_disease_related:
+                    off_target_df.loc[row.Index, "risk_score"] = "Medium_regulatory"
+                else:
+                    off_target_df.loc[row.Index, "risk_score"] = "Low_regulatory"
     return off_target_df
 
+
+def get_enhanced_off_target_risk_summary(off_target_df, gencode_db, enhancer_atlas_db, remap_epd_db, omim_db, cosmic_db):
+    off_target_risk_df = off_target_df.loc[off_target_df["risk_score"] != "",
+                                           ["off_target_id", "cr_rna", "dna", "chromosome",
+                                            "start", "end", "strand", "mismatch"]]
+
+    off_target_risk_df["off_target_id"] = off_target_risk_df["off_target_id"].astype(int)
+
+
+    omim_db_df = None
+    cosmic_db_df = None
+
+
+    if omim_db:
+        omim_db_df = omim_db.db_df[["gene_ensembl_id", "disease_related", "inheritance_model"]]
+        omim_db_df = omim_db_df.loc[~omim_db_df["gene_ensembl_id"].isna()].set_index("gene_ensembl_id")
+
+    if cosmic_db:
+        cosmic_db_df = cosmic_db.db_df[["gene_ensembl_id", "Role in Cancer"]].rename(
+            columns={"Role in Cancer": "role_in_cancer"})
+        cosmic_db_df = cosmic_db_df.loc[~cosmic_db_df["gene_ensembl_id"].isna()].set_index("gene_ensembl_id")
+
+
+    if gencode_db:
+        custom_gencode_db = gencode_db.complete_result[["off_target_id", "gene_ensembl_id", "gene_symbol", "gene_type", "segment"]]
+        custom_gencode_db["off_target_id"] = custom_gencode_db["off_target_id"].astype(int)
+        custom_gencode_db = custom_gencode_db.set_index("off_target_id")
+        custom_gencode_db = custom_gencode_db.add_prefix('{}_'.format(gencode_db.db_name.lower()))
+        custom_gencode_db = custom_gencode_db.drop_duplicates()
+        off_target_risk_df = pd.merge(left=off_target_risk_df, right=custom_gencode_db,
+                                      left_index=True, right_index=True, how='left')
+
+        if omim_db_df is not None:
+            off_target_risk_df = pd.merge(left=off_target_risk_df,
+                                          right=omim_db_df.add_prefix('{}_'.format("gencode_omim")),
+                                          left_on='gencode_gene_ensembl_id', right_index=True, how='left')
+        if cosmic_db_df is not None:
+            off_target_risk_df = pd.merge(left=off_target_risk_df,
+                                          right=cosmic_db_df.add_prefix('{}_'.format("gencode_cosmic")),
+                                          left_on='gencode_gene_ensembl_id', right_index=True, how='left')
+
+    if enhancer_atlas_db:
+        custom_enhancer_atlas_db = enhancer_atlas_db.complete_result[
+            ["off_target_id", "gene_ensembl_id", "gene_symbol"]]
+        custom_enhancer_atlas_db["off_target_id"] = custom_enhancer_atlas_db["off_target_id"].astype(int)
+        custom_enhancer_atlas_db = custom_enhancer_atlas_db.set_index("off_target_id")
+        custom_enhancer_atlas_db = custom_enhancer_atlas_db.add_prefix('{}_'.format(enhancer_atlas_db.db_name.lower()))
+        custom_enhancer_atlas_db = custom_enhancer_atlas_db.drop_duplicates()
+
+        off_target_risk_df = pd.merge(left=off_target_risk_df, right=custom_enhancer_atlas_db,
+                                      left_index=True, right_index=True, how='left')
+
+        if omim_db_df is not None:
+            off_target_risk_df = pd.merge(left=off_target_risk_df,
+                                          right=omim_db_df.add_prefix('{}_'.format("enhanceratlas_omim")),
+                                          left_on='enhanceratlas_gene_ensembl_id', right_index=True, how='left')
+        if cosmic_db_df is not None:
+            off_target_risk_df = pd.merge(left=off_target_risk_df,
+                                          right=cosmic_db_df.add_prefix('{}_'.format("enhanceratlas_cosmic")),
+                                          left_on='enhanceratlas_gene_ensembl_id', right_index=True, how='left')
+
+    if remap_epd_db:
+        custom_remap_epd_db = remap_epd_db.complete_result[
+            ["off_target_id", "gene_ensembl_id", "epd_gene_symbol"]]
+        custom_remap_epd_db["off_target_id"] = custom_remap_epd_db["off_target_id"].astype(int)
+        custom_remap_epd_db = custom_remap_epd_db.set_index("off_target_id")
+        custom_remap_epd_db = custom_remap_epd_db.add_prefix('{}_'.format(remap_epd_db.db_name.lower()))
+        custom_remap_epd_db = custom_remap_epd_db.drop_duplicates()
+
+
+        off_target_risk_df = pd.merge(left=off_target_risk_df, right=custom_remap_epd_db,
+                                      left_index=True, right_index=True, how='left')
+
+        if omim_db_df is not None:
+            off_target_risk_df = pd.merge(left=off_target_risk_df,
+                                          right=omim_db_df.add_prefix('{}_'.format("remapepd_omim")),
+                                          left_on='remapepd_gene_ensembl_id', right_index=True, how='left')
+        if cosmic_db_df is not None:
+            off_target_risk_df = pd.merge(left=off_target_risk_df,
+                                          right=cosmic_db_df.add_prefix('{}_'.format("remapepd_cosmic")),
+                                          left_on='remapepd_gene_ensembl_id', right_index=True, how='left')
+
+
+    return off_target_risk_df
+
+def get_enhanced_off_target_risk_score_summary(off_target_risk_df):
+    off_target_risk_df["risk_score"] = ""
+    for row_idx, row in enumerate(off_target_risk_df.itertuples()):
+        gene_type = row.gencode_gene_type
+        segment = row.gencode_segment
+        if gene_type == 'protein_coding':
+            if segment == "exon":
+                if not (pd.isna(row.gencode_omim_disease_related) and pd.isna(row.gencode_omim_inheritance_model)
+                        and pd.isna(row.gencode_cosmic_role_in_cancer)):
+                    off_target_risk_df.iloc[row_idx, off_target_risk_df.columns.get_loc("risk_score")] = "High_coding"
+                else:
+                    off_target_risk_df.iloc[row_idx, off_target_risk_df.columns.get_loc("risk_score")] = "Medium_coding"
+            elif segment == "transcript":
+                off_target_risk_df.iloc[row_idx, off_target_risk_df.columns.get_loc("risk_score")] = "Low_coding"
+
+        elif not (pd.isna(row.remapepd_gene_ensembl_id) and pd.isna(row.enhanceratlas_gene_ensembl_id)):
+            if not (pd.isna(row.enhanceratlas_cosmic_role_in_cancer) and
+                    pd.isna(row.remapepd_cosmic_role_in_cancer) and
+                    pd.isna(row.remapepd_omim_inheritance_model) and
+                    pd.isna(row.enhanceratlas_omim_inheritance_model) and
+                    pd.isna(row.enhanceratlas_omim_disease_related) and
+                    pd.isna(row.remapepd_omim_disease_related)):
+                off_target_risk_df.iloc[row_idx, off_target_risk_df.columns.get_loc("risk_score")] = "Medium_regulatory"
+            else:
+                off_target_risk_df.iloc[row_idx, off_target_risk_df.columns.get_loc("risk_score")] = "Low_regulatory"
+
+    off_target_risk_df = off_target_risk_df.loc[off_target_risk_df["risk_score"] != ""]
+
+    return off_target_risk_df
 
 def add_db(db_list, db):
     """

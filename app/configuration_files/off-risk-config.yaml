@@ -1,7 +1,9 @@
 # Comment
 yaml-version: 1.0
 genomes:
-  human: /databases/genome/hg38.fa
+  human:
+    full: /databases/genome/hg38.fa
+    chromosomes_folder: /databases/genome/chroms
 databases:
   base_path: /databases
   gencode:
@@ -195,11 +197,15 @@ off_target_result_columns:
   - start
   - end
   - strand
-  - score
-  - attributes
+  - mismatch
+#  - score
+#  - attributes
   - id
-  - sequence
+  - dna
+  - cr_rna
+#  - sequence
   - gene_ensembl_id
+  - gene_type
   - gene_symbol
   - segment
   - mir_gene

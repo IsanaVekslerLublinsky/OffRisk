@@ -5,13 +5,16 @@ services:
       - "8123:80"
     volumes:
       - <path_to_database_folder>/databases:/databases
-    image: almaliahbgu/off_risk:off-risk-server
+    image: talmalulbgu/off-risk-server:latest
 
   off-risk-ui:
     ports:
      - "8501:8501"
-    image: almaliahbgu/off_risk:off-risk-ui
+    image: talmalulbgu/off-risk-ui:latest
 networks:
- default:
-   external:
-    name: OffRisk-net
+  off-risk-net:
+    external: true
+
+# default:
+#  external:
+#    name: off-risk-net

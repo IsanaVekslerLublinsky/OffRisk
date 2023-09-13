@@ -35,4 +35,5 @@ FLASHFRY_SCORE_OUTPUT_PATH = "{}/off_target_output/flashfry_output.output.scored
 
 # Database location
 COMPLETE_GENOME_PATH = "/databases/genome/hg38.fa"
+COMPLETE_GENOME_SEPERATED_FOLDER_PATH = "/databases/genome/chroms"
 COMPLETE_GENOME_URL = "https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz"

@@ -1,3 +1,4 @@
+
 # OffRisk User guide
 
 OffRisk is a pipeline that comprise of two dockers – server docker and web UI docker.
@@ -9,255 +10,289 @@ The web UI enables users to easily run analysis with offRisk server for two use 
 
 1. Off-target analysis – input from the user for off-target location and returning the results of
     the analysis.
-2. On-target analysis – user input gRNA sequences, and then using Cas-OFFinder and FlashFry
+2. On-target analysis – user input gRNA sequences, and then using <cite> [Cas-OFFinder][1] </cite>, <cite> [FlashFry][2] </cite> or <cite> [CRISPRitz][3] </cite>
     the pipeline will search for the off-target locations and then analysis them and return the
     results.
 
-## Installation
 
-### Docker
+## Getting Started
+
+<details>
+
+<summary>Installation</summary><blockquote>
+
+<details>
+
+<summary>Docker</summary>
+
+### Docker Installation
 
 To work with the docker files, docker and docker-compose must be installed.
-
 https://docs.docker.com/get-docker/
+#### If downloading for windows use the “WSL 2 backend” option
 
-### If downloading for windows use the “WSL 2 backend” option
-
-- Enable the WSL 2 feature on Windows. For detailed instructions, refer to the Microsoft
-    documentation (https://learn.microsoft.com/en-us/windows/wsl/install).
-- Download and install the Linux kernel update package (https://learn.microsoft.com/en-
-    us/windows/wsl/install-manual#step- 4 ---download-the-linux-kernel-update-package).
+- Enable the WSL 2 feature on Windows. For detailed instructions, refer to the [Microsoft documentation](https://learn.microsoft.com/en-us/windows/wsl/install).
+- Download and install the [Linux kernel update package](https://learn.microsoft.com/en-us/windows/wsl/install-manual#step-4---download-the-linux-kernel-update-package).
 - Set WSL 2 as your default version, as it is needed by the docker.
 
 Restart computer and run “Docker desktop” from the start menu / desktop shortcut (if you
 created one)
 
-The dockers configurations are in docker-compose.yml file for easy work with both dockers. A
-modification to the volumes path needs to be done – please see explanation in chapter Run on-
-target / off-target search on docker.
-
-To work with OffRisk the following file need to be downloaded:
-https://www.ise.bgu.ac.il/clusters/OffRisk-db.tar.gz
-
 This will require 8 GB. It contains the database folder, this user guide and docker-compose.yml file.
 
-The docker are also available to download without the docker-compose.yml file from:
 
 OffRisk dockers are on DockerHub: https://hub.docker.com/r/almaliahbgu/off_risk/tags
 
 - Docker server will require 6.5 GB.
 - Docker UI will require 1.61 GB.
 
-The code is also available from GitHub in the following links:
 
-- https://github.com/gili311/OffRisk
+</details>
+
+<details>
+<summary>Databases</summary>
+
+### Databases Installation
+
+All necessary database files, including in the *Supported Databases* list bellow, except for OMIM and COSMIC. OMIM and COSMIC require licenses, can be found in the [OffRisk-db.zip archive](https://doi.org/10.5281/zenodo.8289271) on <cite> [Zenodo][4] </cite>.</br>
+The total disk space required for this archive is approximately 10.5 GB.
+
+#### Supported Databases:
+ 
+- GENCODE
+- MirGeneDB
+- ReMapEPD
+- EnhancerAtlas 2.0
+- Pfam
+- TargetScan 8.0
+- OMIM
+- HumanTF 3.0
+- Protein Atlas
+- RBP
+- COSMIC
+
+#### Database Files:
+
+All necessary files for these databases are included in the [OffRisk-db.zip archive](https://doi.org/10.5281/zenodo.8289271), except for OMIM and COSMIC. OMIM and COSMIC require licenses. Therefore, users interested in using them should follow these steps:
+
+#### COSMIC Database:
+
+1. Download the COSMIC file from [https://cancer.sanger.ac.uk/cosmic/download](https://cancer.sanger.ac.uk/cosmic/download). Look for the "Cancer Gene Census" file.
+
+2. Under "Tools", navigate to the database conversion page in OffRisk.
+
+3. Upload the downloaded COSMIC file.
+
+4. Click the "Pre-process COSMIC" button.
+
+5. Download the result file with the given name.
+
+6. Place the downloaded file in the "COSMIC" folder in your database directory. Name it "cosmic.csv".
+
+#### OMIM Database:
+
+1. Download two OMIM files from [https://www.omim.org/contact](https://www.omim.org/contact). You'll need both "mim2gene.txt" and "genemap2.txt".
+
+2. Under "Tools", navigate to the database conversion page in OffRisk.
+
+3. Upload both OMIM files.
+
+4. Click the "Pre-process OMIM" button.
+
+5. Download the result file with the given name.
+
+6. Place the downloaded file in the "OMIM" folder in your database directory. Name it "omim.csv".
+
+</details>
+<details>
+
+<summary>Off-Risk</summary>
+
+### Download off-risk-sever and off-risk-ui dockers
+
+**Installing Off-Risk with Docker:**
+
+1. Start by installing Docker on your computer if you haven't already. You can download it from [Docker's official website](https://www.docker.com/get-started).
+
+2. Download the necessary databases for Off-Risk.
+
+3. Next, you'll want to download the Off-Risk server and UI Docker containers. To do this, follow these steps:
+
+   - Download the `docker-compose.yml` file from the [OffRisk repository](https://github.com/gili311/OffRisk/blob/main/docker/docker-compose.yml).
+   
+   - Your `docker-compose.yml` file should resemble the following configuration:
+
+     ```yaml
+     version: "3.9"  # Optional, required for Docker version v1.27.0 and later
+     services:
+       off-risk-server:
+         ports:
+           - "8123:80"
+         volumes:
+           - <path_to_database_folder>/databases:/databases
+         image: almaliahbgu/off_risk:off-risk-server
+
+       off-risk-ui:
+         ports:
+           - "8501:8501"
+         image: almaliahbgu/off_risk:off-risk-ui
+     networks:
+       default:
+         external:
+           name: OffRisk-net
+     ```
+   
+   - Replace `<path_to_database_folder>` under the `volumes` section with the actual path to your database folder.
+
+4. Once you have the `docker-compose.yml` file, open Docker Desktop on your computer.
+
+5. Open your terminal (e.g., Command Prompt or Terminal).
+
+6. Navigate to the location where you downloaded the `docker-compose.yml` file using the `cd` command, e.g., `cd <path_to_docker-compose.yml_folder>`.
+
+7. In the terminal, enter the following command: `docker-compose up –no-build`.</br>
+This command will start the download and setup of the Off-Risk server and UI Docker containers on your computer.
+
+By following these steps, you'll have Off-Risk installed and ready to use on your machine.
+
+The off-risk-server and off-risk-ui dockers are also available to download without the docker-compose.yml file from:
+
+</details></blockquote>
+
+</details>
 
 
-- https://github.com/gili311/OffRisk-ui
+
 
 ## Usage
 
-The web UI docker must communicate with the server docker.
+&ensp; The web UI docker must communicate with the server docker.
 
-The server docker can work as standalone and integrate with other tools by using API.
+&ensp; The server docker can work as standalone and integrate with other tools by using API.
 
-Validation on the input is done using python module pydantic and have the following structure:
-
-### General structure
+&ensp; Validation on the input is done using python module pydantic and have the following structure:
 
 
-#### Off-target
-
-Has two types of objects:
-
-OffTarget():
-chrom: str
-start: int
-end: int
-strand: str = **None**
-
-OffTargetList:
-request_id: int
-organism: str = 'human'
-off_targets: List[OffTarget]
-on_target = OffTarget = None
-db_list: List[str] = ["all"]
-
-OffTarget defines one off-target. “chrom” structure begins is a number of the chromosome or “X”,
-“Y”. “strand can be “+” or “-“.
-
-OffTargetList is an object containing request id for API request, off_sites which is a list of OffTarget
-and db_list which contains specification on which databases to run the analysis.
-
-#### On-target
-
-Has two types of objects:
-
-#### Site:
-
-#### sequence: str # include sequences and pam
-
-mismatch: int = **4**
-
-SitesList:
-request_id: int
-pattern: str = "NNNNNNNNNNNNNNNNNNNNNGG"
-pattern_dna_bulge: int = **0**
-pattern_rna_bulge: int = **0**
-sites: List[Site]
-db_list: List[str] = ["all"]
-search_tools: List[str] = ["flashfry"]
-
-Site defines how a single gRNA we are searching for will look like. The sequence of the gRNA is
-mandatory and must include the PAM site, and mismatch is the number of allowed mismatches. By
-default, it will be 4.
-
-SiteList is an object containing request id for API request, a list of sites to search for, db_list which
-contains specification on which databases to run the analysis. Search_tools it the tool to search for
-off-target and can be FlashFry or Cas-OFFinder. Finally, the different pattern options are as described
-in Cas-OFFinder documentation.
 
 
-### Database folder structure
+## API Documentation
 
-Database folder structure:
+### `POST /v1/flashfry/`
 
-“db_list” contains a list of supported databases to analyze.
+&ensp; This endpoint is used to perform a FlashFry analysis for a list of target sites.
 
-Currently supported databases:
+&ensp; **Request Body:**
+ ```json
+ {
+   "request_id": 123,
+   "sites": [
+     {
+       "sequence": "ATGCATGCATGC",
+       "mismatch": 3
+     },
+     {
+       "sequence": "CGTACGTACGTA",
+       "mismatch": 2
+     }
+   ]
+ }
+ ```
+ - `request_id`: An integer representing the request identifier for this on-target search.
+ - `sites`: A list of objects representing target sites and their mismatch limits.
+   - `sequence`: A sequence
 
-"gencode" **,** "mirgene" **,** "remapepd" **,** "enhanceratlas" **,** "pfam" **,** "targetscan" **,**
-"omim" **,** "humantf" **,** "protein_atlas" **,** "rbp" **,** "cosmic"]
+### `POST /v1/on-target-analyze/`
 
-All relevant files for the databases are in the OffRisk-db.tar file except for OMIM and COSMIC. OMIM
-and COSMIC require licenses. therefore, users who want to use them need to download them from
-the website and convert them:
+&ensp; This endpoint is used to perform an on-target analysis for a list of target sites.
 
-1. Download the file for COSMIC **:** from - **https://cancer.sanger.ac.uk/cosmic/download, file**
-    **Cancer Gene Census**.
-2. Download the files for OMIM. Both files are needed: from **- https://www.omim.org/contact**
-    , files name **: mim2gene.txt** and genemap2.txt.
-3. Navigate in OffRisk to the page **convert databases** , and upload the files there.
-4. For COSMIC database conversion click on the button **Pre-process COSMIC**.
-5. For OMIM database conversion click on the button **Pre-process OMIM**.
-6. Download the result file (do not change the given name) and place it in the relevant folder
-    on your database folders.
-
-
-7. The file for COSMIC should be **cosmic.csv** in folder **COSMIC**.
-8. The file for OMIM should be **omim.csv** in folder **OMIM**.
-
-A script name preprocess.py is also available for converting new files and versions of the original
-database to the structure of OffRisk databases. The script should be run with name as
-
-### Run on-target / off-target search on docker
-
-on the first use run the following:
-
-1. Change the path of the volume for your database in docker-compose.yml under services-
-    >off-risk-server->volumes.
-    For example, if the path of the database is in /home/database, then the line should be:
-    “/home/database:/databases”
-2. Run: ‘docker network create OffRisk-net'.
-3. Run: ‘docker-compuse up –no-build'
-
-once both docker are up browse to the one of the URL presented like the following example
-(Network URL or External URL:
-
-or to the following default URL: [http://localhost:8051/](http://localhost:8051/).
-
-In the UI side bar, there are 4 options under Navigation:
-
-- Home – home page.
-- Convert databases – for creating OMIM and COSMIC databases.
-- Off-target – page to analyze input off-target sites from the user.
-- On-target – page to search for off-target for a gRNA and then analyze the resulted locations.
-
-Once choosing the relevant page follow the instruction:
-
-
-#### Off-target page
-
-Select the relevant server and database for this analysis. Options are CRISPR-IL, local or custom. For
-local use, the server should be **local.** The server will load on localhost, docker network OffRisk-net,
-port 8123.
-
-This page receives off-target site location from the user in a tsv (tab delimiter file) format or written
-as text.
-
-The tsv file should be in the following structure, each line is a site, and each value is separate with
-tab (chromosome, start position, end position, strand):
-
-1 116905 116928 +
-
-10 20041965 20041988 +
-
-The text should be in the following structure, each line is a site, and each value is separate with a
-space:
-
-1 116905 116928 +
-
-10 20041965 20041988 +
-
-Once you finish choosing the input click on **Run** , the results will be presented on the same page. For
-more information on the result please refer to the Result section.
-
-#### On-target page
-
-This page receives on-target site list from the user in json file format or filling the relevant fields.
-
-The different options are:
-
-**Pattern: Relevant** for Cas-OFFinder-bulge run. Indicates the desired pattern including PAM site.
-Default is “NNNNNNNNNNNNNNNNNNNNNGG” (NGG in the end is the PAM site). For more information on
-this field please refer to Cas-OFFinder documentation.
-
-**pattern_dna_bulge** : Relevant for Cas-OFFinder-bulge run. The desire DNA bulge size.
-
-**pattern_rna_bulge** : Relevant for Cas-OFFinder-bulge run. The desire RNA bulge size.
-
-**Sites:** A list of all desired sequences. Each site has the sequence and number of mismatches. The
-default number of mismatchs is 4. For FlashFry the sequence needs to be with PAM.
-**db_list:** A list defining the databases to analyze. The default is “all”. Options databases are:
-["gencode", "mirgene", "remapepd", "enhanceratlas", "pfam", "targetscan", "omim",
-"humantf", "protein_atlas", "rbp", "cosmic"]
-**search_tools:** For on-target search, define which tool will search for off-target location – FlashFry or
-Cas-OFFinder-bulge**.** For more information on each please refer to the relevant guide. It is
-recommended to use FlashFry, since Cas-offinder can take longer and require more computational
-power
-
-
-_From UI:_
-Select the relevant server and database for this analysis.
-
-Select search tool. The default is **FlashFry.**
-
-Fill in the desired Pattern, DNA and RNA bulge, sequance and number of mismatch.
-
-_From file_
-The Json format needs to be in SiteList object structure. An example:
-
+&ensp; **Request Body:**
+```json
 {
-"pattern": "NNNNNNNNNNNNNNNNNNNNNGG",
-"pattern_dna_bulge": 0 ,
-"pattern_rna_bulge": 0 ,
-"sites": [
-{
-"sequence": "CTTAAGAATACGCGTAGTCGAGG",
-"mismatch": 4
-},
-{
-"sequence": "ATGTCTGGTAAGACGCCCATCGG",
-"mismatch": 4
+  "request_id": 456,
+  "pam": "NGG",
+  "downstream": true,
+  "pattern_dna_bulge": 0,
+  "pattern_rna_bulge": 0,
+  "sites": [
+    {
+      "sequence": "ATGCATGCATGC",
+      "mismatch": 4
+    }
+  ],
+  "db_list": ["all"],
+  "search_tools": ["flashfry"]
 }
-],
-"db_list": [“all”],
-"search_tools": [
+```
+- `request_id`: An integer identifier for the on-target analysis request.
+- `pam`: The Protospacer Adjacent Motif (PAM) pattern used for identifying target sites. (`default: NGG`)
+- `downstream`: A boolean indicating whether to include downstream sites.
+- `pattern_dna_bulge` and `pattern_rna_bulge`: Integers representing allowable DNA and RNA bulge patterns. (`default: 0 and 0`)
+- `sites`: A list of objects representing target sites and their mismatch limits. Each site object includes:
+  - `sequence`: The DNA sequence of the target site, **excluding the PAM**.
+  - `mismatch`: The number of allowed mismatches for the target site. (`default: 4`)
+- `db_list`: A list of supported databases to search in. Supported databases include: ["gencode", "mirgene", "remapepd", "enhanceratlas", "pfam", "targetscan", "omim", "humantf", "protein_atlas", "rbp", "cosmic"]. (`default: ["all"]`)
+- `search_tools`: A list of search tools to be used. available search tools are ["cas_offinder", "flashfry", "crispritz"]. (`default: ["flashfry"]`)
 
 
-"flashfry"
-]
+
+
+### `POST /v1/off-target-analyze/`
+
+&ensp;This endpoint is used to perform an off-target analysis for a list of target sites.
+
+
+&ensp;**Request Body:**
+```json
+{
+  "request_id": 789,
+  "organism": "human",
+  "off_targets": [
+    {
+      "chromosome": "chr1",
+      "start": 100,
+      "end": 150,
+      "strand": "+",
+      "sequence": "ATGCATGCATGC"
+    },
+    {
+      "chromosome": "chr2",
+      "start": 200,
+      "end": 250,
+      "strand": "-",
+      "sequence": "CGTACGTACGTA"
+    }
+  ],
+  "on_target": {
+    "chromosome": "chr3",
+    "start": 300,
+    "end": 350,
+    "strand": "+",
+    "sequence": "TGCATGCATGCA"
+  },
+  "db_list": ["all"]
 }
-Choose the file here. Must be a Json file.
 
-For more information on the result please refer to the Result section in the documentation.
+```
+- `request_id`: An integer identifier for the off-target analysis request.
+- `organism`: The organism for which the off-target analysis is performed.
+- `off_targets`: A list of objects representing off-target locations. Each off-target object includes:
+  - `chromosome`: The chromosome identifier of the off-target site.
+  - `start and end`: The start and end positions of the off-target site.
+  - `strand`: The DNA strand on which the off-target site is located (+ or -).
+  - `sequence`: The DNA sequence of the off-target site.
+- `on_target`: An object representing the on-target location. The on-target object includes:
+  - `chromosome`: The chromosome identifier of the off-target site.
+  - `start and end`: The start and end positions of the off-target site.
+  - `strand`: The DNA strand on which the off-target site is located (+ or -).
+  - `sequence`: The DNA sequence of the off-target site.
+- `db_list`: A list of supported databases to search in. Supported databases include: ["gencode", "mirgene", "remapepd", "enhanceratlas", "pfam", "targetscan", "omim", "humantf", "protein_atlas", "rbp", "cosmic"].
+
+
+[1]: https://doi.org/10.1093/bioinformatics/btu048 
+
+[2]: https://bmcbiol.biomedcentral.com/articles/10.1186/s12915-018-0545-0
+
+[3]: https://doi.org/10.1093/bioinformatics/btz867
+
+[4]: https://www.re3data.org/repository/r3d100010468
+
