@@ -86,8 +86,10 @@ WORKDIR /tmp
 WORKDIR /app/tools
 
 
-RUN git clone https://github.com/hyugel/cas-offinder-bulge . && \
-    chmod 0777 cas-offinder-bulge && chmod 0777 cas-offinder && \
+#RUN git clone https://github.com/hyugel/cas-offinder-bulge . && \
+#    chmod 0777 cas-offinder-bulge && chmod 0777 cas-offinder && \
+RUN wget http://www.rgenome.net/static/files/cas-offinder-bulge && \
+    chmod 0777 cas-offinder-bulge && \
     wget https://github.com/mckennalab/FlashFry/releases/download/1.12/FlashFry-assembly-1.12.jar && \
     chmod 0777 FlashFry-assembly-1.12.jar
 

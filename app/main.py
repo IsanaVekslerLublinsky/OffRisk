@@ -7,6 +7,7 @@ import tempfile
 import warnings
 from datetime import timedelta
 from time import perf_counter
+import concurrent.futures
 
 import pandas as pd
 import yaml
@@ -16,7 +17,7 @@ from pydantic_webargs import webargs
 from configuration_files.const import CAS_OFFINDER_OUTPUT_PATH, YAML_CONFIG_FILE
 from db import update_database_base_path, get_database_path
 from helper import get_logger
-from obj_def import OffTargetList, AllDbResult, OtResponse, SitesList, DB_NAME_LIST, FlashFrySite
+from obj_def import OffTargetList, AllDbResult, OtResponse, SitesList, DB_NAME_LIST, FlashFrySite, OffTarget
 from off_risk import extract_data
 from off_target import run_flashfry, run_crispritz, run_cas_offinder_locally, load_off_target_from_file, \
     load_off_target_from_databases
@@ -39,6 +40,11 @@ with open(YAML_CONFIG_FILE, "r") as f:
 
 update_database_base_path(conf_yaml["databases"]["base_path"])
 
+
+def handle_bad_request(e):
+    return make_response(jsonify(error=400, text=str(e)), 400)
+
+app.register_error_handler(ValueError, handle_bad_request)
 
 @app.route("/")
 def hello():
@@ -69,6 +75,7 @@ def off_target_analyze(**kwargs):
         return OtResponse(request_id=body["request_id"],
                           flashfry_score="[]",
                           off_target_df="[]",
+                          target_risk_results= "[]",
                           all_result=AllDbResult(),
                           time=0).dict()
 
@@ -76,7 +83,11 @@ def off_target_analyze(**kwargs):
         tempinput_file = tempfile.NamedTemporaryFile(mode='w', delete=False,
                                                      dir='{}/app/configuration_files/'.format(BASE_DIR))
         log.info("input_file_path: {}".format(tempinput_file.name))
-        input_file_df = pd.DataFrame([dict(s) for s in body["off_targets"]])
+        input_file_df = pd.DataFrame([{OffTarget.get_field_title(k): v for k, v in dict(s).items()} for s in body["off_targets"]])
+        if not OffTarget.get_field_title("sequence") in input_file_df:
+            input_file_df[OffTarget.get_field_title("sequence")] = None
+        input_file_df["cr_rna"] = body["on_target"]["sequence"] if body["on_target"] else None
+
         input_file_df.to_csv(tempinput_file, sep="\t", index=False)
         tempinput_file.close()
         log.info("Loading off-target from a file in: {}".format(tempinput_file.name))
@@ -113,8 +124,12 @@ def analyze_ot(**kwargs):
     flashfry_output = None
     flashfry_score = None
 
+    cas_offinder_future = None
+    crispritz_future = None
+    flashfry_future = None
+
     if not all(len(site["sequence"]) == len(body["sites"][0]["sequence"]) for site in body["sites"]):
-        log.info("not all sequences should be of the same length")
+        log.info("not all sequences are of the same length")
         raise Exception(
             "sequences should be of the same length")
 
@@ -126,7 +141,6 @@ def analyze_ot(**kwargs):
 
 
     if "cas_offinder" in tools_list:
-
         # Create the input file for cas-offinder
         seqs = ",".join(["{} {}".format(s["sequence"] + "N" * len(body["pam"]) if body["downstream"] else
                                           "N" * len(body["pam"]) + s["sequence"],
@@ -142,17 +156,19 @@ def analyze_ot(**kwargs):
         docker_path_to_genome = conf_yaml["genomes"][genome_type]["full"]
 
         # Run Cas-Offinder
+
         try:
-            cas_offinder_output = run_cas_offinder_locally("C", pattern, seqs, docker_path_to_genome)
-            log.info("Finish running cas-offinder")
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                cas_offinder_future = executor.submit(run_cas_offinder_locally, "C", pattern, seqs, docker_path_to_genome)
+
         except Exception as e:
             log.error("An error has occurred while running cas-offinder {}".format(e))
 
     if "flashfry" in tools_list:
         try:
-            flashfry_output, flashfry_score = run_flashfry_from_server(body)
-            # Remove input file
-            log.info("Finish running FlashFry")
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                flashfry_future = executor.submit(run_flashfry_from_server, body)
+
         except Exception as e:
             log.error("An error has occurred while running flashfry {}".format(e))
 
@@ -160,7 +176,8 @@ def analyze_ot(**kwargs):
     if "crispritz" in tools_list:
         try:
             genome_type = conf_yaml["cas_offinder"]["default_genome"]
-            crispritz_output = run_crispritz_from_server(pattern=target_pattern, sites=body["sites"], pam=body["pam"],
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                crispritz_future = executor.submit(run_crispritz_from_server, sites=body["sites"], pam=body["pam"],
                                                          pattern_dna_bulge=body["pattern_dna_bulge"], pattern_rna_bulge=body["pattern_rna_bulge"],
                                                          genome_type=genome_type, downstream=body["downstream"])
             # Remove input file
@@ -168,6 +185,16 @@ def analyze_ot(**kwargs):
             # return crispritz_output.to_json(orient='records')
         except Exception as e:
             log.error("An error has occurred while running CRISPRitz {}".format(e))
+
+    if cas_offinder_future:
+        cas_offinder_output = cas_offinder_future.result()
+        log.info("Finish running cas-offinder")
+    if flashfry_future:
+        flashfry_output, flashfry_score = flashfry_future.result()
+        log.info("Finish running FlashFry")
+    if crispritz_future:
+        crispritz_output = crispritz_future.result()
+        log.info("Finish running CRISPRitz")
 
 
     # analyze
@@ -207,7 +234,7 @@ def analyze(dbs, genome, request_id, off_target_df, time_start=perf_counter(), f
 
     if genome == 'human':
         try:
-            off_t_result, all_result = extract_data(db_name_list=db_name_list, off_target_df=off_target_df,
+            off_t_result, all_result, target_risk_results = extract_data(db_name_list=db_name_list, off_target_df=off_target_df,
                                                     flashfry_score=flashfry_score)
             time_end = perf_counter()
             all_db_result = AllDbResult(**all_result.json)
@@ -215,6 +242,7 @@ def analyze(dbs, genome, request_id, off_target_df, time_start=perf_counter(), f
             response = OtResponse(request_id=request_id,
                                   flashfry_score=off_t_result["flashfry_score"],
                                   off_targets=off_t_result["off_targets"],
+                                  target_risk_results=target_risk_results,
                                   all_result=all_db_result,
                                   time=total_time.total_seconds())
         except pd.errors.EmptyDataError:
@@ -261,14 +289,18 @@ def run_flashfry_from_server(body):
     """
 
     # Run FlashFry
-    flashfry_output = run_flashfry(database_path=get_database_path(), sites=body["sites"], command="discover")
+    flashfry_output = run_flashfry(database_path=get_database_path(), sites=body["sites"], pam="AGG", #pam=body["pam"],
+                                   command="discover")
+
     flashfry_score = run_flashfry(database_path=get_database_path(), command="score",
                                   flashfry_output_df=flashfry_output)
+    flashfry_output['target'] = flashfry_output['target'].map(lambda t: "{}{}".format(t[:-len("NGG")], "NGG"))
+    flashfry_score['target'] = flashfry_score['target'].map(lambda t: "{}{}".format(t[:-len("NGG")], "NGG"))
 
     return flashfry_output, flashfry_score
 
 
-def run_crispritz_from_server(pattern, sites, pam, pattern_dna_bulge, pattern_rna_bulge, genome_type, downstream):
+def run_crispritz_from_server(sites, pam, pattern_dna_bulge, pattern_rna_bulge, genome_type, downstream):
     """
     Run FlashFry
     Args:
@@ -278,7 +310,7 @@ def run_crispritz_from_server(pattern, sites, pam, pattern_dna_bulge, pattern_rn
 
     docker_path_to_genome = conf_yaml["genomes"][genome_type]["chromosomes_folder"]
     crispritz_output = run_crispritz(genome_folder_path=docker_path_to_genome, command="search",sites=sites,
-                                     pattern=pattern, pam=pam, number_of_threads=1000,
+                                     pam=pam, number_of_threads=1000,
                                      pattern_rna_bulge=pattern_rna_bulge, pattern_dna_bulge=pattern_dna_bulge,
                                      downstream=downstream)
 
@@ -295,7 +327,7 @@ def cas_offinder_bulge():
     log.info("Got new request for cas-offinder bulge. Starting to work")
     log.info(request.args)
     return run_cas_offinder_server(request.args, "bulge")
-    # todo: fix this issue - convert request ars from Flask to Fastapi
+
     # return run_cas_offinder_server(request.query_params, "bulge")
 
 
@@ -391,7 +423,6 @@ def run_external_proc(args):
     log.info("The following command will be run: {}\nThis process will take some time.".format(args))
     result = subprocess.run(args, capture_output=True, text=True)
     result_message = "STDOUT: {}\nSTDERR: {}".format(result.stdout, result.stderr)
-    log.info(result_message)
     if result.returncode != 0:
         raise Exception("Error while running Cas-offinder")
     return result_message

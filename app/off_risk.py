@@ -12,7 +12,8 @@ from pybedtools import BedTool
 from configuration_files.const import DB_NAME_LIST, CONF_FILE, YAML_CONFIG_FILE
 from db import GencodeDb, OmimDb, MirGeneDB, HumanTFDb, ProteinAtlas, RBP, COSMIC, ReMapEPD, EnhancerAtlas, Pfam, \
     initialize_off_target_df, analyze_with_id_list, add_db, calculate_score, save_global_off_target_results, \
-    save_db_result, update_database_base_path, get_database_path, TargetScan
+    save_db_result, update_database_base_path, get_database_path, TargetScan, get_enhanced_off_target_risk_summary, \
+    get_enhanced_off_target_risk_score_summary
 from helper import ConfigurationFile, init_logger, update_cas_offinder_path, update_flashfry_path
 from off_target import run_flashfry, run_cas_offinder_api, run_cas_offinder_locally
 
@@ -59,6 +60,13 @@ def extract_data(db_name_list, off_target_df=None, flashfry_score=pd.DataFrame()
     gencode_db = None
     remap_epd_db = None
     enhancer_atlas_db = None
+    cosmic_db = None
+    omim_db = None
+
+
+
+
+
     for current_db_name in db_name_list:
         time_start = perf_counter()
         current_db = None
@@ -81,6 +89,7 @@ def extract_data(db_name_list, off_target_df=None, flashfry_score=pd.DataFrame()
             current_db = TargetScan(file_path, final_columns)
         elif current_db_name == "omim":
             current_db = OmimDb(file_path, final_columns)
+            omim_db = current_db
         elif current_db_name == "humantf":
             current_db = HumanTFDb(file_path, final_columns)
         elif current_db_name == "protein_atlas":
@@ -89,6 +98,7 @@ def extract_data(db_name_list, off_target_df=None, flashfry_score=pd.DataFrame()
             current_db = RBP(file_path, final_columns)
         elif current_db_name == "cosmic":
             current_db = COSMIC(file_path, final_columns)
+            cosmic_db = current_db
 
         if current_db:
             # Analyze  - intersect between GENCDOE result to the the DB columns for intersection.
@@ -125,14 +135,56 @@ def extract_data(db_name_list, off_target_df=None, flashfry_score=pd.DataFrame()
 
     log.info("Saving the results")
     time_start = perf_counter()
-    off_target_df = calculate_score(off_target_df) ################# Initialized risk_score #######################
+    off_target_df["risk_score"] = ""
+
+    if gencode_db:
+        off_target_df = calculate_score(off_target_df, gencode_db) ################# Initialized risk_score #######################
+
+    # if gencode_db and enhancer_atlas_db and remap_epd_db and omim_db and cosmic_db:
+    off_target_risk_df = get_enhanced_off_target_risk_summary(off_target_df, gencode_db, enhancer_atlas_db,
+                                                          remap_epd_db, omim_db, cosmic_db)
+
+
+    off_target_df_cols = ["gene_type", "segment", "disease_related", "inheritance_model", "cancer_related",
+                          "remap_epd_gene_ensembl_id", "enhancer_atlas_gene_ensembl_id", "enhancer_atlas_cancer_related",
+                          "enhancer_atlas_inheritance_model", "enhancer_atlas_disease_related",
+                          "remap_epd_cancer_related", "remap_epd_inheritance_model", "remap_epd_disease_related"]
+
+    off_target_risk_df_cols = ["gencode_gene_type", "gencode_segment", "gencode_omim_disease_related",
+                               "gencode_omim_inheritance_model", "gencode_cosmic_role_in_cancer",
+                               "remapepd_gene_ensembl_id", "enhanceratlas_gene_ensembl_id",
+                               "enhanceratlas_cosmic_role_in_cancer", "enhanceratlas_omim_inheritance_model",
+                               "enhanceratlas_omim_disease_related", "remapepd_cosmic_role_in_cancer",
+                               "remapepd_omim_inheritance_model", "remapepd_omim_disease_related"]
+
+
+
+    for risk_col in off_target_risk_df_cols + ["remapepd_epd_gene_symbol", "enhanceratlas_gene_symbol"]:
+        if risk_col not in off_target_risk_df.columns:
+            off_target_risk_df[risk_col] = None
+
+    off_target_risk_df = get_enhanced_off_target_risk_score_summary(off_target_risk_df)
+    for off_target_id in list(set(off_target_risk_df.index)):
+        off_target_risk = str(off_target_df.loc[off_target_df["off_target_id"] == off_target_id, "risk_score"].iloc[0])
+        off_target_risk_row = off_target_risk_df.loc[(off_target_risk_df.index == off_target_id) &
+                                                     (off_target_risk_df["risk_score"] == off_target_risk)].iloc[0]
+
+
+        row = off_target_risk_row[off_target_risk_df_cols].fillna("")
+        for col_1, col_2 in zip(off_target_df_cols, off_target_risk_df_cols):
+            off_target_df.loc[off_target_df["off_target_id"] == off_target_id, col_1] = row[col_2]
+            off_target_df.loc[off_target_df["off_target_id"] == off_target_id, col_1] = \
+                off_target_df.loc[off_target_df["off_target_id"] == off_target_id, col_1].map(lambda x: [x])
+
+
+
     ot_results = save_global_off_target_results(off_target_df, flashfry_score, conf_yaml["off_target_result_columns"])
     db_results = save_db_result(db_list)
     time_end = perf_counter()
     log.info("Total run for saving: {}".format(timedelta(seconds=(time_end - time_start))))
     log.info("Clearing the result")
 
-    return ot_results, db_results
+    return ot_results, db_results, off_target_risk_df.to_json(orient="records")
 
 
 def main():

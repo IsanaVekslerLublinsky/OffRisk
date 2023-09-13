@@ -620,9 +620,6 @@ def preprocess_humantf():
 # Protein Atlas
 PA_INPUT_PATH = ""
 PA_OUTPUT_PATH = ""
-FILTER_INTEGER = 50
-
-
 def get_info_from_tsv(tsv_file, k):
     """
     get_info_from_tsv function:
@@ -672,6 +669,9 @@ def get_info_from_tsv(tsv_file, k):
         new_df.loc[len(new_df)] = curr_row
     new_df.to_csv(PA_OUTPUT_PATH, index=False)
     print("-----DONE-----")
+
+
+FILTER_INTEGER = 50
 
 
 def preprocess_proteinatlas():

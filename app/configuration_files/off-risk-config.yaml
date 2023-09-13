@@ -197,11 +197,15 @@ off_target_result_columns:
   - start
   - end
   - strand
-  - score
-  - attributes
+  - mismatch
+#  - score
+#  - attributes
   - id
-  - sequence
+  - dna
+  - cr_rna
+#  - sequence
   - gene_ensembl_id
+  - gene_type
   - gene_symbol
   - segment
   - mir_gene
