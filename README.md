@@ -41,11 +41,10 @@ created one)
 This will require 8 GB. It contains the database folder, this user guide and docker-compose.yml file.
 
 
-OffRisk dockers are on DockerHub: https://hub.docker.com/r/almaliahbgu/off_risk/tags
+OffRisk dockers are on DockerHub: 
 
-- Docker server will require 6.5 GB.
-- Docker UI will require 1.61 GB.
-
+- [Off-Risk-Server](https://hub.docker.com/r/talmalulbgu/off-risk-server)
+- [Off-Risk-UI](https://hub.docker.com/r/talmalulbgu/off-risk-ui)
 
 </details>
 
@@ -150,7 +149,7 @@ All necessary files for these databases are included in the [OffRisk-db.zip arch
 
 6. Navigate to the location where you downloaded the `docker-compose.yml` file using the `cd` command, e.g., `cd <path_to_docker-compose.yml_folder>`.
 
-7. In the terminal, enter the following command: `docker-compose up –no-build`.</br>
+7. In the terminal, enter the following command: `docker-compose up`.</br>
 This command will start the download and setup of the Off-Risk server and UI Docker containers on your computer.
 
 By following these steps, you'll have Off-Risk installed and ready to use on your machine.
