@@ -14,6 +14,7 @@ The web UI enables users to easily run analysis with offRisk server for two use 
     the pipeline will search for the off-target locations and then analysis them and return the
     results.
 
+for usage on how is best work with Off-Risk, please refer the [Off-Risk UI repository](https://github.com/gili311/OffRisk-ui)
 
 ## Getting Started
 
@@ -26,6 +27,8 @@ The web UI enables users to easily run analysis with offRisk server for two use 
 <summary>Docker</summary>
 
 ### Docker Installation
+
+**For your convenience, we have also prepared an [docker installation video](https://www.dropbox.com/scl/fi/mie1rnb8b8r6oumjcs6yo/Docker-Installation-Made-with-Clipchamp.mp4?rlkey=6fcsm29adhfhws9vjq570tck1&dl=0) that you can refer to for guidance.**
 
 To work with the docker files, docker and docker-compose must be installed.
 https://docs.docker.com/get-docker/
@@ -52,6 +55,8 @@ OffRisk dockers are on DockerHub:
 <summary>Databases</summary>
 
 ### Databases Installation
+
+**For your convenience, we have also prepared an [full Off-Risk installation video](https://www.dropbox.com/scl/fi/p8aqz75opxv73ro0ktoi7/Off-Risk-Installation-Made-with-Clipchamp.mp4?rlkey=qgomzpn9rkrh55bjc1auaardh&dl=0) that you can refer to for guidance.**
 
 All necessary database files, including in the *Supported Databases* list bellow, except for OMIM and COSMIC. OMIM and COSMIC require licenses, can be found in the [OffRisk-db.zip archive](https://doi.org/10.5281/zenodo.8289271) on <cite> [Zenodo][4] </cite>.</br>
 The total disk space required for this archive is approximately 10.5 GB.
@@ -108,6 +113,8 @@ All necessary files for these databases are included in the [OffRisk-db.zip arch
 <summary>Off-Risk</summary>
 
 ### Download off-risk-sever and off-risk-ui dockers
+
+**For your convenience, we have also prepared an [full Off-Risk installation video](https://www.dropbox.com/scl/fi/p8aqz75opxv73ro0ktoi7/Off-Risk-Installation-Made-with-Clipchamp.mp4?rlkey=qgomzpn9rkrh55bjc1auaardh&dl=0) that you can refer to for guidance.**
 
 **Installing Off-Risk with Docker:**
 
