@@ -132,6 +132,8 @@ class OffTargetList(BaseModel):
             if any(dependency in v for dependency in gencode_dependent):
                 raise ValueError("the databases {} dependent on GenCode so it must be selected as well".format(gencode_dependent))
 
+        return v
+
 
 class Site(BaseModel):
     """
