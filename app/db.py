@@ -914,7 +914,7 @@ def get_enhanced_off_target_risk_summary(off_target_df, gencode_db, enhancer_atl
         cosmic_db_df = cosmic_db_df.loc[~cosmic_db_df["gene_ensembl_id"].isna()].set_index("gene_ensembl_id")
 
 
-    if gencode_db:
+    if gencode_db and len(gencode_db.complete_result) > 0:
         custom_gencode_db = gencode_db.complete_result[["off_target_id", "gene_ensembl_id", "gene_symbol", "gene_type", "segment"]]
         custom_gencode_db["off_target_id"] = custom_gencode_db["off_target_id"].astype(int)
         custom_gencode_db = custom_gencode_db.set_index("off_target_id")
@@ -932,7 +932,7 @@ def get_enhanced_off_target_risk_summary(off_target_df, gencode_db, enhancer_atl
                                           right=cosmic_db_df.add_prefix('{}_'.format("gencode_cosmic")),
                                           left_on='gencode_gene_ensembl_id', right_index=True, how='left')
 
-    if enhancer_atlas_db:
+    if enhancer_atlas_db and len(enhancer_atlas_db.complete_result) > 0:
         custom_enhancer_atlas_db = enhancer_atlas_db.complete_result[
             ["off_target_id", "gene_ensembl_id", "gene_symbol"]]
         custom_enhancer_atlas_db["off_target_id"] = custom_enhancer_atlas_db["off_target_id"].astype(int)
@@ -952,7 +952,7 @@ def get_enhanced_off_target_risk_summary(off_target_df, gencode_db, enhancer_atl
                                           right=cosmic_db_df.add_prefix('{}_'.format("enhanceratlas_cosmic")),
                                           left_on='enhanceratlas_gene_ensembl_id', right_index=True, how='left')
 
-    if remap_epd_db:
+    if remap_epd_db and len(remap_epd_db.complete_result) > 0:
         custom_remap_epd_db = remap_epd_db.complete_result[
             ["off_target_id", "gene_ensembl_id", "epd_gene_symbol"]]
         custom_remap_epd_db["off_target_id"] = custom_remap_epd_db["off_target_id"].astype(int)
