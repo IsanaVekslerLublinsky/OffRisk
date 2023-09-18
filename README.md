@@ -293,6 +293,11 @@ The off-risk-server and off-risk-ui dockers are also available to download witho
   - `sequence`: The DNA sequence of the off-target site.
 - `db_list`: A list of supported databases to search in. Supported databases include: ["gencode", "mirgene", "remapepd", "enhanceratlas", "pfam", "targetscan", "omim", "humantf", "protein_atlas", "rbp", "cosmic"].
 
+## Contact Us
+
+Your feedback is incredibly valuable to us. If you have any specific suggestions or encounter any issues, please don't hesitate to share them with us via the GitHub issue tracker.</br>
+We are genuinely eager to hear your thoughts and ideas to continually improve our tool.
+
 
 [1]: https://doi.org/10.1093/bioinformatics/btu048 
 
