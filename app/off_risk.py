@@ -137,25 +137,26 @@ def extract_data(db_name_list, off_target_df=None, flashfry_score=pd.DataFrame()
     time_start = perf_counter()
     off_target_df["risk_score"] = ""
 
-    if gencode_db:
-        off_target_df = calculate_score(off_target_df, gencode_db) ################# Initialized risk_score #######################
+    off_target_df = calculate_score(off_target_df, gencode_db, enhancer_atlas_db, remap_epd_db, omim_db, cosmic_db)
 
     # if gencode_db and enhancer_atlas_db and remap_epd_db and omim_db and cosmic_db:
     off_target_risk_df = get_enhanced_off_target_risk_summary(off_target_df, gencode_db, enhancer_atlas_db,
                                                           remap_epd_db, omim_db, cosmic_db)
 
 
-    off_target_df_cols = ["gene_type", "segment", "disease_related", "inheritance_model", "cancer_related",
+
+    off_target_df_cols = ["gene_ensembl_id", "gene_symbol", "gene_type", "segment", "disease_related", "inheritance_model", "cancer_related",
                           "remap_epd_gene_ensembl_id", "enhancer_atlas_gene_ensembl_id", "enhancer_atlas_cancer_related",
                           "enhancer_atlas_inheritance_model", "enhancer_atlas_disease_related",
                           "remap_epd_cancer_related", "remap_epd_inheritance_model", "remap_epd_disease_related"]
 
-    off_target_risk_df_cols = ["gencode_gene_type", "gencode_segment", "gencode_omim_disease_related",
-                               "gencode_omim_inheritance_model", "gencode_cosmic_role_in_cancer",
-                               "remapepd_gene_ensembl_id", "enhanceratlas_gene_ensembl_id",
-                               "enhanceratlas_cosmic_role_in_cancer", "enhanceratlas_omim_inheritance_model",
-                               "enhanceratlas_omim_disease_related", "remapepd_cosmic_role_in_cancer",
-                               "remapepd_omim_inheritance_model", "remapepd_omim_disease_related"]
+    off_target_risk_df_cols = ["gencode_gene_ensembl_id", "gencode_gene_symbol", "gencode_gene_type",
+                               "gencode_segment", "gencode_omim_disease_related", "gencode_omim_inheritance_model",
+                               "gencode_cosmic_role_in_cancer", "remapepd_gene_ensembl_id",
+                               "enhanceratlas_gene_ensembl_id", "enhanceratlas_cosmic_role_in_cancer",
+                               "enhanceratlas_omim_inheritance_model", "enhanceratlas_omim_disease_related",
+                               "remapepd_cosmic_role_in_cancer", "remapepd_omim_inheritance_model",
+                               "remapepd_omim_disease_related"]
 
 
 
@@ -184,7 +185,7 @@ def extract_data(db_name_list, off_target_df=None, flashfry_score=pd.DataFrame()
     log.info("Total run for saving: {}".format(timedelta(seconds=(time_end - time_start))))
     log.info("Clearing the result")
 
-    return ot_results, db_results, off_target_risk_df.to_json(orient="records")
+    return ot_results, db_results, off_target_risk_df.reset_index().to_json(orient="records")
 
 
 def main():

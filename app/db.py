@@ -840,8 +840,7 @@ def save_global_off_target_results(off_target_df, flashfry_score, columns_order=
     return save_result
 
 
-def calculate_score(off_target_df, gencode_db):
-    detailed_off_target_df = pd.DataFrame()
+def calculate_score(off_target_df, gencode_db = None, enhancer_atlas_db = None, remap_epd_db = None, omim_db = None, cosmic_db = None):
     off_target_complete_col = ["chromosome", "start", "end", "off_target_id", "score", "strand", "mismatch"
                                "attributes", "id", "dna", "cr_rna", "gene_ensembl_id", "gene_symbol",
                                "segment", "mir_gene", "remap_epd_gene_ensembl_id",
@@ -854,55 +853,122 @@ def calculate_score(off_target_df, gencode_db):
     off_target_current_col = off_target_df.columns.tolist()
     missing_col = [x for x in off_target_complete_col if x not in off_target_current_col]
 
+
     off_target_df[missing_col] = ""
+    off_target_gencode_df = pd.DataFrame(columns=["gene_ensembl_id", "gene_type", "segment"])
+    off_target_remap_epd_df = pd.DataFrame(columns=["gene_ensembl_id"])
+    off_target_enhancer_atlas_df = pd.DataFrame(columns=["gene_ensembl_id"])
+
     for row in off_target_df.itertuples():
-        dict_gencode = {}
-        gene_types_segments = list(gencode_db.complete_result.loc
-                                   [
-                                       gencode_db.complete_result['off_target_id'] == row.off_target_id,
-                                       ['gene_type', 'segment']
-                                   ].itertuples(index=False, name=None))
+        risk_score = ""
+        if gencode_db and len(gencode_db.complete_result.index) > 0:
+            off_target_gencode_df = gencode_db.complete_result.loc[gencode_db.complete_result["off_target_id"] == row.off_target_id,["gene_ensembl_id", "gene_type", "segment"]]
+        if remap_epd_db and len(remap_epd_db.complete_result.index) > 0:
+            off_target_remap_epd_df = remap_epd_db.complete_result.loc[remap_epd_db.complete_result["off_target_id"] == row.off_target_id, ["gene_ensembl_id"]]
+        if enhancer_atlas_db and len(enhancer_atlas_db.complete_result.index) > 0:
+            off_target_enhancer_atlas_df = enhancer_atlas_db.complete_result.loc[enhancer_atlas_db.complete_result["off_target_id"] == row.off_target_id, ["gene_ensembl_id"]]
 
+        if len(off_target_gencode_df.index) > 0:
+            off_target_protein_coding_df = off_target_gencode_df.loc[off_target_gencode_df["gene_type"] == "protein_coding"]
+            if len(off_target_protein_coding_df.index) > 0:
+                off_target_exon_df = off_target_protein_coding_df.loc[off_target_protein_coding_df["segment"] == "exon"]
 
-        for gene_type, segment in gene_types_segments:
-            if gene_type == 'protein_coding':
-                if segment == "exon":
-                    if (row.disease_related is not None and not isinstance(row.disease_related, list) and row.disease_related != "") or \
-                            (row.disease_related is not None and isinstance(row.disease_related, list) and len(row.disease_related) > 0) or \
-                            (row.inheritance_model is not None and not isinstance(row.inheritance_model, list) and row.inheritance_model != "") or \
-                            (row.inheritance_model is not None and isinstance(row.inheritance_model, list) and len(row.inheritance_model) > 0) or \
-                            (row.cancer_related is not None and not isinstance(row.cancer_related, list) and row.cancer_related != "") or \
-                            (row.cancer_related is not None and isinstance(row.cancer_related, list) and len(row.cancer_related) > 0):
-
-                        off_target_df.loc[row.Index, "risk_score"] = "High_coding"
-                        dict_gencode[row.Index] = "High_coding"
-
+                if len(off_target_exon_df.index) > 0:
+                    if query_have_disease(list(off_target_exon_df["gene_ensembl_id"]), omim_db, cosmic_db):
+                        risk_score = "High_coding"
                     else:
-                        off_target_df.loc[row.Index, "risk_score"] = "Medium_coding"
-                elif segment == "transcript":
-                    off_target_df.loc[row.Index, "risk_score"] = "Low_coding"
+                        risk_score = "Medium_coding"
 
-            elif row.remap_epd_gene_ensembl_id or row.enhancer_atlas_gene_ensembl_id:
-                if row.enhancer_atlas_cancer_related or row.enhancer_atlas_inheritance_model or \
-                        row.enhancer_atlas_disease_related or row.remap_epd_cancer_related or \
-                        row.remap_epd_inheritance_model or row.remap_epd_disease_related:
-                    off_target_df.loc[row.Index, "risk_score"] = "Medium_regulatory"
+                elif len(off_target_protein_coding_df.loc[off_target_protein_coding_df["segment"] == "transcript"].index) > 0:
+                    risk_score = "Low_coding"
+
+
+        if risk_score == "":
+            if len(off_target_remap_epd_df.index) > 0 or len(off_target_enhancer_atlas_df.index) > 0:
+                if query_have_disease(list(off_target_remap_epd_df["gene_ensembl_id"]), omim_db, cosmic_db) or \
+                        query_have_disease(list(off_target_enhancer_atlas_df["gene_ensembl_id"]), omim_db, cosmic_db):
+                    risk_score = "Medium_regulatory"
                 else:
-                    off_target_df.loc[row.Index, "risk_score"] = "Low_regulatory"
+                    risk_score = "Low_regulatory"
+
+
+        off_target_df.loc[row.Index, "risk_score"] = risk_score
+
     return off_target_df
 
 
-def get_enhanced_off_target_risk_summary(off_target_df, gencode_db, enhancer_atlas_db, remap_epd_db, omim_db, cosmic_db):
+
+def query_omim_disease(gene_ensembl_id = [], omim_db = None):
+
+    result = pd.DataFrame(columns=["gene_ensembl_id", "disease_related", "inheritance_model"])
+    result = result.set_index("gene_ensembl_id")
+    if omim_db:
+        omim_db_df = omim_db.db_df[["gene_ensembl_id", "disease_related", "inheritance_model"]]
+        omim_db_df = omim_db_df.loc[~omim_db_df["gene_ensembl_id"].isna()].set_index("gene_ensembl_id")
+
+        if len(gene_ensembl_id) == 0:
+            result = pd.DataFrame(columns=["gene_ensembl_id", "disease_related", "inheritance_model"])
+            result = result.set_index("gene_ensembl_id")
+        else:
+            indices = set(gene_ensembl_id)
+            indices = list(indices.intersection(omim_db_df.index))
+            result = omim_db_df.loc[indices]
+
+    return result
+
+
+def query_cosmic_disease(gene_ensembl_id = [], cosmic_db = None):
+
+    result = pd.DataFrame(columns=["gene_ensembl_id", "role_in_cancer"])
+    result = result.set_index("gene_ensembl_id")
+
+    if cosmic_db:
+        cosmic_db_df = cosmic_db.db_df[["gene_ensembl_id", "Role in Cancer"]].rename(
+            columns={"Role in Cancer": "role_in_cancer"})
+        cosmic_db_df = cosmic_db_df.loc[~cosmic_db_df["gene_ensembl_id"].isna()].set_index("gene_ensembl_id")
+
+        if len(gene_ensembl_id) == 0:
+            result = pd.DataFrame(columns=["gene_ensembl_id", "role_in_cancer"])
+            result = result.set_index("gene_ensembl_id")
+        else:
+            indices = set(gene_ensembl_id)
+            indices = list(indices.intersection(cosmic_db_df.index))
+            result = cosmic_db_df.loc[indices]
+
+    return result
+
+def query_have_disease(gene_ensembl_id = [], omim_db = None, cosmic_db = None):
+
+    b_disease = False
+    omim_disease_df = query_omim_disease(gene_ensembl_id, omim_db)
+    cosmic_disease_df = query_cosmic_disease(gene_ensembl_id, cosmic_db)
+
+
+    if len(omim_disease_df.index) > 0:
+        b_disease = b_disease or len(omim_disease_df.loc[
+                                         ((~omim_disease_df["disease_related"].isna()) & (omim_disease_df["disease_related"].str.strip().str.len() > 0)) |
+                                         (~omim_disease_df["inheritance_model"].isna()) & (omim_disease_df["inheritance_model"].str.strip().str.len() > 0)].index) > 0
+    if len(cosmic_disease_df.index) > 0:
+        b_disease = b_disease or len(cosmic_disease_df.loc[(~cosmic_disease_df["role_in_cancer"].isna()) & (cosmic_disease_df["role_in_cancer"].str.strip().str.len() > 0)].index) > 0
+
+
+    return b_disease
+
+
+def get_enhanced_off_target_risk_summary(off_target_df, gencode_db = None, enhancer_atlas_db = None, remap_epd_db = None, omim_db = None, cosmic_db = None):
     off_target_risk_df = off_target_df.loc[off_target_df["risk_score"] != "",
                                            ["off_target_id", "cr_rna", "dna", "chromosome",
                                             "start", "end", "strand", "mismatch"]]
 
     off_target_risk_df["off_target_id"] = off_target_risk_df["off_target_id"].astype(int)
 
+    off_target_risk_df = off_target_risk_df.set_index("off_target_id")
 
-    omim_db_df = None
-    cosmic_db_df = None
 
+    omim_db_df = pd.DataFrame(columns=["gene_ensembl_id", "disease_related", "inheritance_model"])
+    omim_db_df = omim_db_df.set_index("gene_ensembl_id")
+    cosmic_db_df = pd.DataFrame(columns=["gene_ensembl_id", "role_in_cancer"])
+    cosmic_db_df = cosmic_db_df.set_index("gene_ensembl_id")
 
     if omim_db:
         omim_db_df = omim_db.db_df[["gene_ensembl_id", "disease_related", "inheritance_model"]]
@@ -914,7 +980,7 @@ def get_enhanced_off_target_risk_summary(off_target_df, gencode_db, enhancer_atl
         cosmic_db_df = cosmic_db_df.loc[~cosmic_db_df["gene_ensembl_id"].isna()].set_index("gene_ensembl_id")
 
 
-    if gencode_db and len(gencode_db.complete_result) > 0:
+    if gencode_db and len(gencode_db.complete_result.index) > 0:
         custom_gencode_db = gencode_db.complete_result[["off_target_id", "gene_ensembl_id", "gene_symbol", "gene_type", "segment"]]
         custom_gencode_db["off_target_id"] = custom_gencode_db["off_target_id"].astype(int)
         custom_gencode_db = custom_gencode_db.set_index("off_target_id")
@@ -923,16 +989,16 @@ def get_enhanced_off_target_risk_summary(off_target_df, gencode_db, enhancer_atl
         off_target_risk_df = pd.merge(left=off_target_risk_df, right=custom_gencode_db,
                                       left_index=True, right_index=True, how='left')
 
-        if omim_db_df is not None:
+        if len(omim_db_df.index) > 0:
             off_target_risk_df = pd.merge(left=off_target_risk_df,
                                           right=omim_db_df.add_prefix('{}_'.format("gencode_omim")),
                                           left_on='gencode_gene_ensembl_id', right_index=True, how='left')
-        if cosmic_db_df is not None:
+        if len(cosmic_db_df.index) > 0:
             off_target_risk_df = pd.merge(left=off_target_risk_df,
                                           right=cosmic_db_df.add_prefix('{}_'.format("gencode_cosmic")),
                                           left_on='gencode_gene_ensembl_id', right_index=True, how='left')
 
-    if enhancer_atlas_db and len(enhancer_atlas_db.complete_result) > 0:
+    if enhancer_atlas_db and len(enhancer_atlas_db.complete_result.index) > 0:
         custom_enhancer_atlas_db = enhancer_atlas_db.complete_result[
             ["off_target_id", "gene_ensembl_id", "gene_symbol"]]
         custom_enhancer_atlas_db["off_target_id"] = custom_enhancer_atlas_db["off_target_id"].astype(int)
@@ -943,16 +1009,16 @@ def get_enhanced_off_target_risk_summary(off_target_df, gencode_db, enhancer_atl
         off_target_risk_df = pd.merge(left=off_target_risk_df, right=custom_enhancer_atlas_db,
                                       left_index=True, right_index=True, how='left')
 
-        if omim_db_df is not None:
+        if len(omim_db_df.index) > 0:
             off_target_risk_df = pd.merge(left=off_target_risk_df,
                                           right=omim_db_df.add_prefix('{}_'.format("enhanceratlas_omim")),
                                           left_on='enhanceratlas_gene_ensembl_id', right_index=True, how='left')
-        if cosmic_db_df is not None:
+        if len(cosmic_db_df.index) > 0:
             off_target_risk_df = pd.merge(left=off_target_risk_df,
                                           right=cosmic_db_df.add_prefix('{}_'.format("enhanceratlas_cosmic")),
                                           left_on='enhanceratlas_gene_ensembl_id', right_index=True, how='left')
 
-    if remap_epd_db and len(remap_epd_db.complete_result) > 0:
+    if remap_epd_db and len(remap_epd_db.complete_result.index) > 0:
         custom_remap_epd_db = remap_epd_db.complete_result[
             ["off_target_id", "gene_ensembl_id", "epd_gene_symbol"]]
         custom_remap_epd_db["off_target_id"] = custom_remap_epd_db["off_target_id"].astype(int)
@@ -964,11 +1030,11 @@ def get_enhanced_off_target_risk_summary(off_target_df, gencode_db, enhancer_atl
         off_target_risk_df = pd.merge(left=off_target_risk_df, right=custom_remap_epd_db,
                                       left_index=True, right_index=True, how='left')
 
-        if omim_db_df is not None:
+        if len(omim_db_df.index) > 0:
             off_target_risk_df = pd.merge(left=off_target_risk_df,
                                           right=omim_db_df.add_prefix('{}_'.format("remapepd_omim")),
                                           left_on='remapepd_gene_ensembl_id', right_index=True, how='left')
-        if cosmic_db_df is not None:
+        if len(cosmic_db_df.index) > 0:
             off_target_risk_df = pd.merge(left=off_target_risk_df,
                                           right=cosmic_db_df.add_prefix('{}_'.format("remapepd_cosmic")),
                                           left_on='remapepd_gene_ensembl_id', right_index=True, how='left')
@@ -979,28 +1045,31 @@ def get_enhanced_off_target_risk_summary(off_target_df, gencode_db, enhancer_atl
 def get_enhanced_off_target_risk_score_summary(off_target_risk_df):
     off_target_risk_df["risk_score"] = ""
     for row_idx, row in enumerate(off_target_risk_df.itertuples()):
+        risk_score = ""
         gene_type = row.gencode_gene_type
         segment = row.gencode_segment
         if gene_type == 'protein_coding':
             if segment == "exon":
                 if not (pd.isna(row.gencode_omim_disease_related) and pd.isna(row.gencode_omim_inheritance_model)
                         and pd.isna(row.gencode_cosmic_role_in_cancer)):
-                    off_target_risk_df.iloc[row_idx, off_target_risk_df.columns.get_loc("risk_score")] = "High_coding"
+                    risk_score = "High_coding"
                 else:
-                    off_target_risk_df.iloc[row_idx, off_target_risk_df.columns.get_loc("risk_score")] = "Medium_coding"
+                    risk_score = "Medium_coding"
             elif segment == "transcript":
-                off_target_risk_df.iloc[row_idx, off_target_risk_df.columns.get_loc("risk_score")] = "Low_coding"
+                risk_score = "Low_coding"
 
-        elif not (pd.isna(row.remapepd_gene_ensembl_id) and pd.isna(row.enhanceratlas_gene_ensembl_id)):
+        if risk_score == "" and not (pd.isna(row.remapepd_gene_ensembl_id) and pd.isna(row.enhanceratlas_gene_ensembl_id)):
             if not (pd.isna(row.enhanceratlas_cosmic_role_in_cancer) and
                     pd.isna(row.remapepd_cosmic_role_in_cancer) and
                     pd.isna(row.remapepd_omim_inheritance_model) and
                     pd.isna(row.enhanceratlas_omim_inheritance_model) and
                     pd.isna(row.enhanceratlas_omim_disease_related) and
                     pd.isna(row.remapepd_omim_disease_related)):
-                off_target_risk_df.iloc[row_idx, off_target_risk_df.columns.get_loc("risk_score")] = "Medium_regulatory"
+                risk_score = "Medium_regulatory"
             else:
-                off_target_risk_df.iloc[row_idx, off_target_risk_df.columns.get_loc("risk_score")] = "Low_regulatory"
+                risk_score = "Low_regulatory"
+
+        off_target_risk_df.iloc[row_idx, off_target_risk_df.columns.get_loc("risk_score")] = risk_score
 
     off_target_risk_df = off_target_risk_df.loc[off_target_risk_df["risk_score"] != ""]
 
