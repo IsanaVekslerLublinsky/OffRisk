@@ -58,7 +58,7 @@ OffRisk dockers are on DockerHub:
 
 **For your convenience, we have also prepared an [full Off-Risk installation video](https://www.dropbox.com/scl/fi/p8aqz75opxv73ro0ktoi7/Off-Risk-Installation-Made-with-Clipchamp.mp4?rlkey=qgomzpn9rkrh55bjc1auaardh&dl=0) that you can refer to for guidance.**
 
-All necessary database files, including in the *Supported Databases* list bellow, except for OMIM and COSMIC. OMIM and COSMIC require licenses, can be found in the [OffRisk-db.zip archive](https://doi.org/10.5281/zenodo.8289271) on <cite> [Zenodo][4] </cite>.</br>
+All necessary database files, including in the *Supported Databases* list bellow, except for OMIM and COSMIC. OMIM and COSMIC require licenses, can be found in the [OffRisk-db.zip archive](https://doi.org/10.5281/zenodo.8289270) on <cite> [Zenodo][4] </cite>.</br>
 The total disk space required for this archive is approximately 10.5 GB.
 
 #### Supported Databases:
